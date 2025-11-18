@@ -1,0 +1,344 @@
+@font-face {
+  font-family: 'IntegralCF-Bold';
+  src: url('./fonts/IntegralCF-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  margin: 0;
+  font-family: 'IntegralCF-Bold', sans-serif;
+  background-color: #c6c6c6;
+}
+
+.hero-section {
+  width: 100%;
+  height: 100vh;
+  padding: 80px;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #3a3a3a;
+  position: relative;
+  z-index: 1;
+}
+
+.image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Styles pour le carrousel */
+.carousel-row {
+  position: absolute;
+  width: 100%;
+  overflow: hidden;
+  left: 0;
+}
+
+.back-row {
+  bottom: 0px;
+  opacity: 1;
+  filter: blur(0px);
+  z-index: 1;
+  /* Push the whole back row slightly lower than the front row */
+  transform: translateY(40px);
+  transition: transform 0.3s ease;
+}
+
+.front-row {
+  bottom: 0px;
+  z-index: 2;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  animation-timing-function: linear;
+}
+
+.back-row .carousel-track {
+  animation: scrollLeft 120s linear infinite;
+}
+
+.front-row .carousel-track {
+  animation: scrollLeft 100s linear infinite;
+}
+
+/* Overlap & stagger for front-row (chevauchement léger + hauteur variable) */
+.front-row .person-card {
+  margin-left: -80px;
+  z-index: 2;
+  transition: transform 0.3s ease;
+}
+
+/* Ensure the first item of each repeated group doesn't get a negative margin
+   so both sequences line up exactly (prevents jump when looping) */
+.front-row .person-card:nth-child(3n+1) {
+  margin-left: 0;
+}
+
+.front-row .person-card:nth-child(3n+1) {
+  transform: translateY(220px);
+  z-index: 3;
+}
+
+.front-row .person-card:nth-child(3n+2) {
+  transform: translateY(178px);
+  z-index: 4;
+}
+
+.front-row .person-card:nth-child(3n) {
+  transform: translateY(166px);
+  z-index: 2;
+}
+
+/* Slight overlap for back-row but less pronounced */
+.back-row .person-card {
+  margin-left: -40px;
+}
+
+/* Stagger vertical positions for back-row so they appear lower and not level */
+.back-row .person-card:nth-child(3n+1) {
+  transform: translateY(112px);
+  /* also ensure the repeated-group-first has no negative margin */
+  margin-left: 140px;
+}
+
+.back-row .person-card:nth-child(3n+2) {
+  transform: translateY(128px);
+}
+
+.back-row .person-card:nth-child(3n) {
+  transform: translateY(160px);
+}
+
+.person-card {
+  width: 630px;
+  height: 800px;
+  border-radius: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  will-change: transform;
+  backface-visibility: hidden;
+  background-color: transparent;
+}
+
+.person-card img {
+  width: 340%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.person-card span {
+  font-size: 24px;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-transform: uppercase;
+}
+
+/* Animations */
+@keyframes scrollLeft {
+  0% {
+    transform: translate3d(0,0,0);
+  }
+
+  100% {
+    transform: translate3d(-50%,0,0);
+  }
+}
+
+@keyframes scrollRight {
+  0% {
+    transform: translate3d(-50%,0,0);
+  }
+
+  100% {
+    transform: translate3d(0,0,0);
+  }
+}
+
+.navbar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 40px;
+  z-index: 9999;
+  background-color: white;
+  border-radius: 40px;
+  padding: 17px 17px;
+  transition: all 0.5s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  max-width: 30px;
+  font-family: "mongoose", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+  outline: 2px solid #ec1d3241;
+  box-shadow: none;
+}
+
+.navbar:hover,
+.navbar.open {
+  padding: 20px 20px;
+  max-width: 1000px;
+  border-radius: 20px;
+  outline: 0px solid #EC1D31;
+  box-shadow: 0 5px 30px #ec1d3252, 0 0 0px
+}
+
+.burger-icon {
+  width: 25px;
+  height: 25px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  position: absolute;
+}
+
+.burger-icon span {
+  width: 100%;
+  height: 3px;
+  background-color: #EC1D31;
+  border-radius: 1000px;
+  transition: all 0.3s ease;
+}
+
+.navbar:hover .burger-icon,
+.navbar.open .burger-icon {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nav-links {
+  text-transform: uppercase;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+  position: relative;
+}
+
+.nav-indicator {
+  position: absolute;
+  height: calc(100% + 16px);
+  /* ← ICI : change 8px pour ajuster la hauteur */
+  top: -8px;
+  /* Doit être la moitié de la valeur ci-dessus */
+  background-color: #EC1D31;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.navbar:hover .nav-links,
+.navbar.open .nav-links {
+  opacity: 1;
+  transition: opacity 0.3s ease 0.1s;
+}
+
+.navbar:hover,
+.navbar.open {
+  padding: 20px 40px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #101010;
+  font-size: 26px;
+  background-color: transparent;
+  border-radius: 10px;
+  padding: 10px 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: none;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.nav-links a:hover {
+  background-color: transparent;
+  color: #ffffff;
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 20px;
+  }
+
+  .navbar {
+    max-width: 60px;
+    padding: 12px 16px;
+  }
+
+  .navbar:hover,
+  .navbar.open {
+    padding: 15px 20px;
+    max-width: calc(100vw - 40px);
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .nav-links a {
+    padding: 8px 10px;
+    font-size: 16px;
+  }
+
+  /* Styles responsive pour le carrousel */
+  .back-row {
+    bottom: 80px;
+  }
+
+  .front-row {
+    bottom: 0px;
+  }
+
+  .carousel-track {
+    gap: 20px;
+  }
+
+  .person-card {
+    width: 200px;
+    height: 280px;
+  }
+
+  .person-card span {
+    font-size: 18px;
+  }
+}
