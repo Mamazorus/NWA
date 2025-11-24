@@ -73,11 +73,11 @@ body {
 }
 
 .back-row .carousel-track {
-  animation: scrollLeft 120s linear infinite;
+  animation: scrollLeft 140s linear infinite;
 }
 
 .front-row .carousel-track {
-  animation: scrollLeft 100s linear infinite;
+  animation: scrollLeft 120s linear infinite;
 }
 
 /* Overlap & stagger for front-row (chevauchement léger + hauteur variable) */
@@ -115,17 +115,17 @@ body {
 
 /* Stagger vertical positions for back-row so they appear lower and not level */
 .back-row .person-card:nth-child(3n+1) {
-  transform: translateY(112px);
+  transform: translateY(62px);
   /* also ensure the repeated-group-first has no negative margin */
   margin-left: 140px;
 }
 
 .back-row .person-card:nth-child(3n+2) {
-  transform: translateY(128px);
+  transform: translateY(68px);
 }
 
 .back-row .person-card:nth-child(3n) {
-  transform: translateY(160px);
+  transform: translateY(80px);
 }
 
 .person-card {

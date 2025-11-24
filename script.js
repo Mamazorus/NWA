@@ -56,6 +56,195 @@ document.querySelector('.nav-links').addEventListener('mouseleave', () => {
   indicator.style.opacity = '0';
 });
 
+/*
+ Hover audio: play associated music while hovering a button and fade in/out.
+ - Buttons can specify `data-audio="music/filename.mp3"` on the element.
+ - If no `data-audio` provided, the script will try to derive a file name from
+   the button text (lowercase, spaces -> '-', strip non-alphanum) and try .mp3.
+ - Fade durations and target volume are configurable via constants below.
+*/
+(function attachHoverAudio() {
+  const HOVER_FADE_MS = 800; // fade in/out duration (increased for a slower fade)
+  const TARGET_VOLUME = 0.8; // target playback volume
+
+  const audioMap = new Map(); // element -> { audio, fadeTimer }
+  let audioUnlocked = false;
+
+  function deriveSrcFromText(text) {
+    const name = text.trim().toLowerCase()
+      .replace(/[\s\/\\]+/g, '-')
+      .replace(/[^a-z0-9\-]/g, '') || 'audio';
+    return `music/${name}.mp3`;
+  }
+
+  function createAudioElement(src) {
+    const a = new Audio(src);
+    a.preload = 'auto';
+    a.loop = true;
+    a.volume = 0;
+    // If loading fails, try common alternate extensions (.ogg, .m4a)
+    a._tryFallbacks = [
+      src.replace(/\.mp3$/i, '.ogg'),
+      src.replace(/\.mp3$/i, '.m4a')
+    ].filter(s => s !== src);
+    a.addEventListener('error', (ev) => {
+      console.error('[HoverAudio] failed to load audio', src, ev);
+      // try fallbacks sequentially
+      if (a._tryFallbacks && a._tryFallbacks.length) {
+        const next = a._tryFallbacks.shift();
+        console.debug('[HoverAudio] trying fallback', next);
+        a.src = next;
+        a.load();
+        try { a.play().catch(()=>{}); } catch(e){}
+      } else {
+        console.error('[HoverAudio] no more fallbacks for', src);
+      }
+    });
+    a.addEventListener('canplaythrough', () => {
+      console.debug('[HoverAudio] canplaythrough', src);
+    });
+    return a;
+  }
+
+  function fadeTo(audio, toVolume, duration, cb) {
+    if (!audio) return;
+    if (audio._fadeTimer) {
+      clearInterval(audio._fadeTimer);
+      audio._fadeTimer = null;
+    }
+    const from = audio.volume;
+    const dt = 40; // ms step
+    const steps = Math.max(1, Math.round(duration / dt));
+    const stepDelta = (toVolume - from) / steps;
+    let currentStep = 0;
+    audio._fadeTimer = setInterval(() => {
+      currentStep++;
+      const next = Math.min(1, Math.max(0, audio.volume + stepDelta));
+      audio.volume = next;
+      if (currentStep >= steps) {
+        clearInterval(audio._fadeTimer);
+        audio._fadeTimer = null;
+        audio.volume = toVolume;
+        if (cb) cb();
+      }
+    }, dt);
+  }
+
+  function onEnter(e) {
+    const el = e.currentTarget;
+    console.debug('[HoverAudio] hover enter on', el, 'text:', (el.textContent||el.innerText));
+    let entry = audioMap.get(el);
+    let audioSrc = el.getAttribute('data-audio');
+    if (!audioSrc) {
+      audioSrc = deriveSrcFromText(el.textContent || el.innerText || 'audio');
+    }
+    console.debug('[HoverAudio] resolved audio src:', audioSrc);
+
+    if (!entry || entry.src !== audioSrc) {
+      // if different audio is playing for this element, stop it
+      if (entry && entry.audio) {
+        if (entry.audio._fadeTimer) { clearInterval(entry.audio._fadeTimer); entry.audio._fadeTimer = null; }
+        try { entry.audio.pause(); } catch (err) {}
+      }
+      const audio = createAudioElement(audioSrc);
+      entry = { audio, src: audioSrc };
+      audioMap.set(el, entry);
+    }
+
+    const audio = entry.audio;
+      // If the element specifies a start time (in seconds), seek when possible
+      const startTimeAttr = el.getAttribute('data-start-time');
+      if (startTimeAttr !== null) {
+        const parsedStart = parseFloat(startTimeAttr);
+        if (!isNaN(parsedStart) && parsedStart > 0) {
+          const seek = () => {
+            try { audio.currentTime = parsedStart; } catch (err) { /* ignore */ }
+          };
+          if (audio.readyState >= 1) {
+            seek();
+          } else {
+            audio.addEventListener('loadedmetadata', function onMeta() {
+              audio.removeEventListener('loadedmetadata', onMeta);
+              seek();
+            });
+          }
+        }
+      }
+
+      // Per-element volume override via `data-volume` (0.0 - 1.0). Falls back to TARGET_VOLUME.
+      let targetVolume = TARGET_VOLUME;
+      const volAttr = el.getAttribute('data-volume');
+      if (volAttr !== null) {
+        const parsedVol = parseFloat(volAttr);
+        if (!isNaN(parsedVol)) targetVolume = Math.max(0, Math.min(1, parsedVol));
+      }
+    // if already playing, just ensure fade to target
+    if (audio.paused) {
+      // play returns a promise in modern browsers
+      const p = audio.play();
+      if (p && p.catch) p.catch((err) => {
+        console.warn('[HoverAudio] play() rejected for', audioSrc, err);
+      });
+    }
+      // fade in to the element's target volume
+      console.debug('[HoverAudio] fade in ->', targetVolume, 'for', audioSrc);
+      fadeTo(audio, targetVolume, HOVER_FADE_MS);
+  }
+
+  function onLeave(e) {
+    const el = e.currentTarget;
+    console.debug('[HoverAudio] hover leave on', el);
+    const entry = audioMap.get(el);
+    if (!entry || !entry.audio) return;
+    const audio = entry.audio;
+    // fade out then pause
+    console.debug('[HoverAudio] fade out for', entry.src);
+    fadeTo(audio, 0, HOVER_FADE_MS, () => {
+      try { audio.pause(); audio.currentTime = 0; } catch (err) {}
+    });
+  }
+
+  // Attach to nav-links a elements and any element with `data-audio` (buttons)
+  const hoverTargets = Array.from(document.querySelectorAll('.nav-links a, [data-audio]'));
+  hoverTargets.forEach(t => {
+    t.addEventListener('mouseenter', onEnter);
+    t.addEventListener('mouseleave', onLeave);
+    // also support focus/blur for keyboard users
+    t.addEventListener('focus', onEnter);
+    t.addEventListener('blur', onLeave);
+  });
+
+  // Some browsers block audible play until a user gesture; hover may not count.
+  // To avoid requiring a click on a specific link, listen for the first
+  // user gesture (pointerdown or keydown) anywhere and pre-play muted audio
+  // for each target to "unlock" playback capability.
+  function unlockAllAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    console.debug('[HoverAudio] unlocking audio by preplaying muted tracks');
+    hoverTargets.forEach(t => {
+      try {
+        const src = t.getAttribute('data-audio') || deriveSrcFromText(t.textContent || t.innerText || 'audio');
+        const a = createAudioElement(src);
+        a.muted = true;
+        // try to play briefly to unlock autoplay policy
+        const p = a.play();
+        if (p && p.catch) p.catch(() => {});
+        // stop after a short time
+        setTimeout(() => {
+          try { a.pause(); a.currentTime = 0; } catch (e) {}
+        }, 200);
+      } catch (e) {
+        // ignore per-source errors
+      }
+    });
+    document.removeEventListener('pointerdown', unlockAllAudio);
+    document.removeEventListener('keydown', unlockAllAudio);
+  }
+
+  document.addEventListener('pointerdown', unlockAllAudio, { once: true });
+  document.addEventListener('keydown', unlockAllAudio, { once: true });
+})();
 // Smooth continuous carousel (JS-driven) to avoid visible jump at loop reset
 // Replaces CSS animation on each `.carousel-track` after images load.
 function initSmoothCarousels() {
@@ -107,7 +296,29 @@ function initSmoothCarousels() {
       if (!groupWidth) return;
 
       const speed = groupWidth / duration; // pixels per second
+      // initial offset: priority order
+      // 1) `data-initial-time` in seconds (start as if carousel ran this many seconds)
+      // 2) `data-initial-offset` in pixels
+      // 3) default small initial time (5s)
       let offset = 0;
+      const initTimeAttr = track.getAttribute('data-initial-time');
+      if (initTimeAttr !== null) {
+        const parsedTime = parseFloat(initTimeAttr);
+        if (!isNaN(parsedTime) && parsedTime > 0) {
+          // offset = seconds * speed, wrapped within groupWidth
+          offset = (parsedTime * speed) % groupWidth;
+        }
+      } else {
+        const initOffsetAttr = track.getAttribute('data-initial-offset');
+        if (initOffsetAttr !== null) {
+          const parsed = parseFloat(initOffsetAttr);
+          if (!isNaN(parsed)) offset = Math.max(0, parsed) % groupWidth;
+        } else {
+          // default: start as if carousel already ran 5 seconds
+          const defaultStartSeconds = 5;
+          offset = (defaultStartSeconds * speed) % groupWidth;
+        }
+      }
       let last = performance.now();
 
       function step(now) {
