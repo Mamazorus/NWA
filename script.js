@@ -344,3 +344,75 @@ function initSmoothCarousels() {
 }
 
 initSmoothCarousels();
+
+// Parallax for `.layer-bg` and `.layer-main` — mouse position driven, eased via rAF
+function initParallaxLayers() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const container = document.querySelector('.transition') || document.querySelector('.hero-section');
+  const bg = document.querySelector('.layer-bg');
+  const main = document.querySelector('.layer-main');
+  if (!container || (!bg && !main)) return;
+
+  // Strength in pixels (how much each layer moves). Background moves less and opposite,
+  // foreground/main moves more. Reduced strength for a subtler effect.
+  // reduce strengths and slow lerp so movement is subtler and takes longer
+  // Larger amplitude on X, but keep easing slow so motion doesn't feel faster
+  const BG_STRENGTH_X = 40; // px (subtle but larger than before)
+  const BG_STRENGTH_Y = 0; // vertical movement disabled
+  const MAIN_STRENGTH_X = 80; // px (foreground moves more noticeably)
+  const MAIN_STRENGTH_Y = 0; // vertical movement disabled
+
+  // smoothed values (horizontal-only). Lower ease => slower to reach target.
+  let targetX = 0;
+  let currentX = 0;
+  const ease = 0.002; // keep slow easing so movement takes longer (unchanged)
+
+  function onMove(e) {
+    const rect = container.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const x = (e.clientX - cx) / (rect.width / 2); // -1 .. 1
+    // clamp only horizontal axis
+    targetX = Math.max(-1, Math.min(1, x));
+  }
+
+  function onLeave() {
+    targetX = 0;
+  }
+
+  container.addEventListener('mousemove', onMove);
+  container.addEventListener('mouseleave', onLeave);
+  container.addEventListener('touchstart', (ev) => {
+    if (ev.touches && ev.touches[0]) onMove(ev.touches[0]);
+  }, { passive: true });
+  container.addEventListener('touchmove', (ev) => {
+    if (ev.touches && ev.touches[0]) onMove(ev.touches[0]);
+  }, { passive: true });
+  container.addEventListener('touchend', onLeave);
+
+  function rafStep() {
+    // simple lerp toward target
+    // horizontal-only lerp
+    currentX += (targetX - currentX) * ease;
+
+    // Apply horizontal-only transforms
+    if (bg) {
+      // background moves opposite and subtly on X only
+      const bx = -currentX * BG_STRENGTH_X;
+      bg.style.transform = `translate3d(${bx}px, 0, 0)`;
+    }
+    if (main) {
+      // main moves with cursor horizontally; vertical is disabled
+      const mx = currentX * MAIN_STRENGTH_X;
+      main.style.transform = `translate3d(calc(-50% + ${mx}px), 0, 0)`;
+    }
+
+    requestAnimationFrame(rafStep);
+  }
+
+  requestAnimationFrame(rafStep);
+}
+
+initParallaxLayers();
+
+// Scrollbar edge-hider removed: scrollbars are hidden globally via CSS.

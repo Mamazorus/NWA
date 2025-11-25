@@ -12,10 +12,18 @@ body {
   background-color: #c6c6c6;
 }
 
+header {
+  width: 100%;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background-color: #c6c6c6;
+}
+
 .hero-section {
   width: 100%;
   height: 100vh;
-  padding: 80px;
+  padding: 0px;
   box-sizing: border-box;
   position: relative;
   display: flex;
@@ -27,9 +35,23 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #3a3a3a;
+  background-color: #fff;
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0px;
+  box-sizing: border-box;
+}
+
+.image-container svg {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .image-container img {
@@ -38,6 +60,37 @@ body {
   object-fit: cover;
   display: block;
 }
+
+.image-container2 {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #000;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0px;
+  box-sizing: border-box;
+}
+
+.image-container2 svg {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.image-container2 img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 
 /* Styles pour le carrousel */
 .carousel-row {
@@ -159,21 +212,21 @@ body {
 /* Animations */
 @keyframes scrollLeft {
   0% {
-    transform: translate3d(0,0,0);
+    transform: translate3d(0, 0, 0);
   }
 
   100% {
-    transform: translate3d(-50%,0,0);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
 @keyframes scrollRight {
   0% {
-    transform: translate3d(-50%,0,0);
+    transform: translate3d(-50%, 0, 0);
   }
 
   100% {
-    transform: translate3d(0,0,0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -183,7 +236,7 @@ body {
   transform: translateX(-50%);
   bottom: 40px;
   z-index: 9999;
-  background-color: white;
+  background-color: #EC1D31;
   border-radius: 40px;
   padding: 17px 17px;
   transition: all 0.5s ease;
@@ -195,7 +248,7 @@ body {
   font-family: "mongoose", sans-serif;
   font-weight: 700;
   font-style: normal;
-  outline: 2px solid #ec1d3241;
+  outline: 7px solid #00000065;
   box-shadow: none;
 }
 
@@ -204,8 +257,8 @@ body {
   padding: 20px 20px;
   max-width: 1000px;
   border-radius: 20px;
-  outline: 0px solid #EC1D31;
-  box-shadow: 0 5px 30px #ec1d3252, 0 0 0px
+  background-color: #00000065;
+  outline: 0px solid #00000065;
 }
 
 .burger-icon {
@@ -222,7 +275,7 @@ body {
 .burger-icon span {
   width: 100%;
   height: 3px;
-  background-color: #EC1D31;
+  background-color: #61060f;
   border-radius: 1000px;
   transition: all 0.3s ease;
 }
@@ -275,7 +328,7 @@ body {
 
 .nav-links a {
   text-decoration: none;
-  color: #101010;
+  color: #ffffff;
   font-size: 26px;
   background-color: transparent;
   border-radius: 10px;
@@ -291,11 +344,15 @@ body {
 
 .nav-links a:hover {
   background-color: transparent;
-  color: #ffffff;
+  color: #61060f;
 }
 
 @media (max-width: 480px) {
   .hero-section {
+    padding: 20px;
+  }
+
+  .image-container {
     padding: 20px;
   }
 
@@ -341,4 +398,79 @@ body {
   .person-card span {
     font-size: 18px;
   }
+}
+
+
+.transition {
+  height: 100vh;
+  background-color: #101010;
+  position: relative;
+}
+
+.layer-bg {
+  background-image: url('img/chapitre1_bg1.png');
+  background-size: cover;
+  width: 100%;
+  height: 100vh;
+  background-position: center center;
+  background-repeat: no-repeat;
+  z-index: 2;
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  will-change: transform;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+}
+
+.layer-main {
+  background-image: url('img/chapitre1_main1.png');
+  pointer-events: none;
+  will-change: transform;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  background-size: cover;
+  width: 100%;
+  height: 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
+  z-index: 3;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0px;
+}
+
+/* Hide scrollbars visually while preserving scrolling when class is set on
+   the document - used to improve immersion when cursor is near window edges. */
+html.edge-hide-scrollbars,
+body.edge-hide-scrollbars {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE 10+ */
+}
+
+html.edge-hide-scrollbars::-webkit-scrollbar,
+body.edge-hide-scrollbars::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Always hide native scrollbars to preserve immersion (still scrollable) */
+html,
+body {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE 10+ */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none;
 }
