@@ -1,15 +1,20 @@
 @font-face {
-  font-family: 'IntegralCF-Bold';
-  src: url('./fonts/IntegralCF-Bold.ttf') format('truetype');
+  font-family: 'Mistral';
+  src: url('./fonts/Mistral') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
   font-family: 'IntegralCF-Bold', sans-serif;
   background-color: #c6c6c6;
+  overflow-x: hidden;
 }
 
 header {
@@ -24,7 +29,6 @@ header {
   width: 100%;
   height: 100vh;
   padding: 0px;
-  box-sizing: border-box;
   position: relative;
   display: flex;
   align-items: center;
@@ -41,58 +45,21 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0px;
-  box-sizing: border-box;
-}
-
-.image-container svg {
-  width: 100%;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
+  padding: 0 80px;
 }
 
 .image-container img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   display: block;
-}
-
-.image-container2 {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: #000;
-  position: relative;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0px;
-  box-sizing: border-box;
-}
-
-.image-container2 svg {
-  width: 100%;
+  width: calc(100vw + 160px);
+  max-width: none;
   height: auto;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
-}
-
-.image-container2 img {
-  width: 100%;
-  height: 100%;
+  margin: 0 -80px;
   object-fit: cover;
-  display: block;
 }
 
-
-/* Styles pour le carrousel */
+/* ============================================
+   CARROUSEL
+   ============================================ */
 .carousel-row {
   position: absolute;
   width: 100%;
@@ -103,11 +70,8 @@ header {
 .back-row {
   bottom: 0px;
   opacity: 1;
-  filter: blur(0px);
   z-index: 1;
-  /* Push the whole back row slightly lower than the front row */
   transform: translateY(40px);
-  transition: transform 0.3s ease;
 }
 
 .front-row {
@@ -122,7 +86,6 @@ header {
   will-change: transform;
   backface-visibility: hidden;
   transform: translateZ(0);
-  animation-timing-function: linear;
 }
 
 .back-row .carousel-track {
@@ -133,20 +96,13 @@ header {
   animation: scrollLeft 120s linear infinite;
 }
 
-/* Overlap & stagger for front-row (chevauchement léger + hauteur variable) */
 .front-row .person-card {
   margin-left: -80px;
   z-index: 2;
-  transition: transform 0.3s ease;
 }
 
-/* Ensure the first item of each repeated group doesn't get a negative margin
-   so both sequences line up exactly (prevents jump when looping) */
 .front-row .person-card:nth-child(3n+1) {
   margin-left: 0;
-}
-
-.front-row .person-card:nth-child(3n+1) {
   transform: translateY(220px);
   z-index: 3;
 }
@@ -161,15 +117,12 @@ header {
   z-index: 2;
 }
 
-/* Slight overlap for back-row but less pronounced */
 .back-row .person-card {
   margin-left: -40px;
 }
 
-/* Stagger vertical positions for back-row so they appear lower and not level */
 .back-row .person-card:nth-child(3n+1) {
   transform: translateY(62px);
-  /* also ensure the repeated-group-first has no negative margin */
   margin-left: 140px;
 }
 
@@ -182,15 +135,13 @@ header {
 }
 
 .person-card {
-  width: 630px;
-  height: 800px;
-  border-radius: 0px;
+  width: 650px;
+  height: 750px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
-  transition: transform 0.3s ease;
   will-change: transform;
   backface-visibility: hidden;
   background-color: transparent;
@@ -202,34 +153,18 @@ header {
   object-fit: contain;
 }
 
-.person-card span {
-  font-size: 24px;
-  color: white;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  text-transform: uppercase;
-}
-
-/* Animations */
 @keyframes scrollLeft {
   0% {
     transform: translate3d(0, 0, 0);
   }
-
   100% {
     transform: translate3d(-50%, 0, 0);
   }
 }
 
-@keyframes scrollRight {
-  0% {
-    transform: translate3d(-50%, 0, 0);
-  }
-
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-}
-
+/* ============================================
+   NAVBAR
+   ============================================ */
 .navbar {
   position: fixed;
   left: 50%;
@@ -244,7 +179,7 @@ header {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  max-width: 30px;
+  max-width: 60px;
   font-family: "mongoose", sans-serif;
   font-weight: 700;
   font-style: normal;
@@ -274,10 +209,9 @@ header {
 
 .burger-icon span {
   width: 100%;
-  height: 3px;
+  height: 3.5px;
   background-color: #61060f;
   border-radius: 1000px;
-  transition: all 0.3s ease;
 }
 
 .navbar:hover .burger-icon,
@@ -304,9 +238,7 @@ header {
 .nav-indicator {
   position: absolute;
   height: calc(100% + 16px);
-  /* ← ICI : change 8px pour ajuster la hauteur */
   top: -8px;
-  /* Doit être la moitié de la valeur ci-dessus */
   background-color: #EC1D31;
   border-radius: 10px;
   transition: all 0.3s ease;
@@ -321,11 +253,6 @@ header {
   transition: opacity 0.3s ease 0.1s;
 }
 
-.navbar:hover,
-.navbar.open {
-  padding: 20px 40px;
-}
-
 .nav-links a {
   text-decoration: none;
   color: #ffffff;
@@ -334,138 +261,203 @@ header {
   border-radius: 10px;
   padding: 10px 15px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: none;
-  position: relative;
-  z-index: 1;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .nav-links a:hover {
-  background-color: transparent;
   color: #61060f;
 }
 
-@media (max-width: 480px) {
-  .hero-section {
-    padding: 20px;
-  }
-
-  .image-container {
-    padding: 20px;
-  }
-
-  .navbar {
-    max-width: 60px;
-    padding: 12px 16px;
-  }
-
-  .navbar:hover,
-  .navbar.open {
-    padding: 15px 20px;
-    max-width: calc(100vw - 40px);
-  }
-
-  .nav-links {
-    flex-wrap: wrap;
-    gap: 15px;
-  }
-
-  .nav-links a {
-    padding: 8px 10px;
-    font-size: 16px;
-  }
-
-  /* Styles responsive pour le carrousel */
-  .back-row {
-    bottom: 80px;
-  }
-
-  .front-row {
-    bottom: 0px;
-  }
-
-  .carousel-track {
-    gap: 20px;
-  }
-
-  .person-card {
-    width: 200px;
-    height: 280px;
-  }
-
-  .person-card span {
-    font-size: 18px;
-  }
-}
-
-
-.transition {
-  height: 100vh;
-  background-color: #101010;
-  position: relative;
-}
-
-.layer-bg {
-  background-image: url('img/chapitre1_bg1.png');
-  background-size: cover;
+/* ============================================
+   SECTIONS HORIZONTALES
+   ============================================ */
+.horizontal-section {
   width: 100%;
   height: 100vh;
-  background-position: center center;
-  background-repeat: no-repeat;
-  z-index: 2;
+  overflow: hidden;
+  position: relative;
+  background-color: #101010;
+}
+
+/* Parallax layers */
+.parallax-layers {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
   pointer-events: none;
-  will-change: transform;
-  transform-origin: center center;
-  backface-visibility: hidden;
-  transform: translate3d(0, 0, 0);
+  overflow: hidden;
 }
 
-.layer-main {
-  background-image: url('img/chapitre1_main1.png');
+.parallax-set {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.8s ease;
   pointer-events: none;
-  will-change: transform;
-  transform-origin: center center;
-  backface-visibility: hidden;
+}
+
+.parallax-set.active {
+  opacity: 1;
+}
+
+.layer-bg {
   background-size: cover;
   width: 100%;
   height: 100%;
   background-position: center center;
   background-repeat: no-repeat;
-  z-index: 3;
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+.layer-main {
+  will-change: transform;
+  background-size: cover;
+  width: 100%;
+  height: 100%;
+  background-position: center center;
+  background-repeat: no-repeat;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 0px;
+  top: 0;
 }
 
-/* Hide scrollbars visually while preserving scrolling when class is set on
-   the document - used to improve immersion when cursor is near window edges. */
-html.edge-hide-scrollbars,
-body.edge-hide-scrollbars {
-  scrollbar-width: none;
-  /* Firefox */
-  -ms-overflow-style: none;
-  /* IE 10+ */
+.horizontal-track {
+  display: flex;
+  align-items: center;
+  gap: 300px;
+  height: 100vh;
+  padding-left: 50vw;
+  padding-right: 50vw;
+  position: relative;
+  will-change: transform;
+  z-index: 5;
 }
 
-html.edge-hide-scrollbars::-webkit-scrollbar,
-body.edge-hide-scrollbars::-webkit-scrollbar {
-  width: 0 !important;
-  height: 0 !important;
+.track-spacer {
+  flex-shrink: 0;
+  width: 50vw;
+  height: 1px;
 }
 
-/* Always hide native scrollbars to preserve immersion (still scrollable) */
+/* ============================================
+   BLOCS DE CONTENU
+   ============================================ */
+.content-block {
+  flex-shrink: 0;
+  width: 350px;
+  padding: 30px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 5px solid #000000;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 10;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Positions Y variées - Chapitre 1 */
+#chapitre1 .content-block:nth-child(1) { transform: translateY(-100px); }
+#chapitre1 .content-block:nth-child(2) { transform: translateY(80px); }
+#chapitre1 .content-block:nth-child(3) { transform: translateY(-50px); }
+#chapitre1 .content-block:nth-child(4) { transform: translateY(120px); }
+#chapitre1 .content-block:nth-child(5) { transform: translateY(-80px); }
+#chapitre1 .content-block:nth-child(6) { transform: translateY(60px); }
+
+/* Positions Y variées - Chapitre 2 */
+#chapitre2 .content-block:nth-child(1) { transform: translateY(90px); }
+#chapitre2 .content-block:nth-child(2) { transform: translateY(-70px); }
+#chapitre2 .content-block:nth-child(3) { transform: translateY(50px); }
+#chapitre2 .content-block:nth-child(4) { transform: translateY(-130px); }
+#chapitre2 .content-block:nth-child(5) { transform: translateY(60px); }
+#chapitre2 .content-block:nth-child(6) { transform: translateY(-90px); }
+
+/* Positions Y variées - Chapitre 3 */
+#chapitre3 .content-block:nth-child(1) { transform: translateY(-60px); }
+#chapitre3 .content-block:nth-child(2) { transform: translateY(100px); }
+#chapitre3 .content-block:nth-child(3) { transform: translateY(-120px); }
+#chapitre3 .content-block:nth-child(4) { transform: translateY(40px); }
+#chapitre3 .content-block:nth-child(5) { transform: translateY(-30px); }
+#chapitre3 .content-block:nth-child(6) { transform: translateY(110px); }
+
+/* Positions Y variées - Chapitre 4 */
+#chapitre4 .content-block:nth-child(1) { transform: translateY(70px); }
+#chapitre4 .content-block:nth-child(2) { transform: translateY(-90px); }
+#chapitre4 .content-block:nth-child(3) { transform: translateY(30px); }
+#chapitre4 .content-block:nth-child(4) { transform: translateY(-60px); }
+#chapitre4 .content-block:nth-child(5) { transform: translateY(100px); }
+#chapitre4 .content-block:nth-child(6) { transform: translateY(-40px); }
+
+/* Positions Y variées - Chapitre 5 */
+#chapitre5 .content-block:nth-child(1) { transform: translateY(-80px); }
+#chapitre5 .content-block:nth-child(2) { transform: translateY(60px); }
+#chapitre5 .content-block:nth-child(3) { transform: translateY(-100px); }
+#chapitre5 .content-block:nth-child(4) { transform: translateY(80px); }
+#chapitre5 .content-block:nth-child(5) { transform: translateY(-50px); }
+#chapitre5 .content-block:nth-child(6) { transform: translateY(120px); }
+
+.content-block:hover {
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+}
+
+.content-block h2 {
+  color: #000000;
+  font-size: 28px;
+  margin: 0 0 20px 0;
+  font-family: 'IntegralCF-Bold', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.content-block p {
+  color: #333;
+  font-size: 18px;
+  line-height: 1.6;
+  margin: 0;
+  font-family: 'Mistral', cursive;
+  font-weight: 400;
+  text-transform: uppercase;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: black;
+  text-align: justify;
+}
+
+/* ============================================
+   PLACEHOLDER
+   ============================================ */
+.placeholder-section {
+  height: 100vh;
+  background-color: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.placeholder-section h2 {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+/* ============================================
+   HIDE SCROLLBARS
+   ============================================ */
 html,
 body {
   scrollbar-width: none;
-  /* Firefox */
   -ms-overflow-style: none;
-  /* IE 10+ */
 }
 
 html::-webkit-scrollbar,
@@ -474,3 +466,7 @@ body::-webkit-scrollbar {
   height: 0 !important;
   display: none;
 }
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
