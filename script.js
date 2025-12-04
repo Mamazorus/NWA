@@ -13,8 +13,25 @@ const lenis = new Lenis({
   smoothWheel: true,
 });
 
+// Variable globale pour la transition rideau
+let curtainTransitionState = {
+  isAnimating: false,
+  currentSection: 'hero',
+  getChapter1Start: () => 0
+};
+
 // Synchroniser Lenis avec ScrollTrigger
-lenis.on('scroll', ScrollTrigger.update);
+lenis.on('scroll', (e) => {
+  ScrollTrigger.update();
+  
+  // Bloquer le scroll vers le haut au début du chapitre 1
+  if (!curtainTransitionState.isAnimating && curtainTransitionState.currentSection === 'chapitre1') {
+    const chapter1Start = curtainTransitionState.getChapter1Start();
+    if (e.scroll < chapter1Start) {
+      lenis.scrollTo(chapter1Start, { immediate: true });
+    }
+  }
+});
 
 gsap.ticker.add((time) => {
   lenis.raf(time * 1000);
@@ -31,6 +48,7 @@ const ChapterMusicManager = {
   currentAudio: null,
   fadeDuration: 1000,
   isUserInteracted: false,
+  isSoundMuted: true, // Muté par défaut
   
   init() {
     const sections = document.querySelectorAll('.horizontal-section[data-music]');
@@ -64,15 +82,78 @@ const ChapterMusicManager = {
         }).catch(() => {});
       });
       
-      // Si on est déjà dans un chapitre, jouer la musique
-      if (this.currentChapter) {
-        this.playChapterMusic(this.currentChapter);
-      }
+      // Vérifier si un chapitre est visible à plus de 50%
+      this.checkVisibleChapter();
     };
     
     document.addEventListener('click', unlockAudio, { once: true });
     document.addEventListener('touchstart', unlockAudio, { once: true });
     document.addEventListener('keydown', unlockAudio, { once: true });
+    
+    // Observer pour détecter quel chapitre est le plus visible (>50%)
+    this.initChapterObserver();
+  },
+  
+  initChapterObserver() {
+    const sections = document.querySelectorAll('.horizontal-section[data-music]');
+    
+    // Observer avec plusieurs seuils pour une meilleure détection
+    const observer = new IntersectionObserver((entries) => {
+      // Vérifier tous les chapitres pour trouver celui avec la plus grande visibilité
+      this.checkVisibleChapter();
+    }, { 
+      threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+      rootMargin: '0px'
+    });
+    
+    sections.forEach(section => observer.observe(section));
+    
+    // Aussi écouter le scroll pour une détection plus précise
+    let scrollTimeout;
+    lenis.on('scroll', () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        this.checkVisibleChapter();
+      }, 50);
+    });
+  },
+  
+  checkVisibleChapter() {
+    if (!this.isUserInteracted || this.isSoundMuted) return;
+    
+    const sections = document.querySelectorAll('.horizontal-section[data-music]');
+    let mostVisibleSection = null;
+    let highestVisibility = 0;
+    
+    sections.forEach(section => {
+      const rect = section.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      
+      // Calculer la partie visible
+      const visibleTop = Math.max(0, rect.top);
+      const visibleBottom = Math.min(windowHeight, rect.bottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      
+      // Ratio de visibilité par rapport à la fenêtre
+      const visibilityRatio = visibleHeight / windowHeight;
+      
+      if (visibilityRatio > highestVisibility) {
+        highestVisibility = visibilityRatio;
+        mostVisibleSection = section;
+      }
+    });
+    
+    // Si un chapitre est visible à plus de 50%, jouer sa musique
+    if (mostVisibleSection && highestVisibility >= 0.5) {
+      if (this.currentChapter !== mostVisibleSection.id) {
+        this.playChapterMusic(mostVisibleSection.id);
+      }
+    } else {
+      // Aucun chapitre visible à plus de 50%, arrêter la musique
+      if (this.currentChapter) {
+        this.stopAllMusic();
+      }
+    }
   },
   
   fadeTo(audio, targetVolume, duration, callback) {
@@ -102,7 +183,7 @@ const ChapterMusicManager = {
   },
   
   playChapterMusic(chapterId) {
-    if (!this.isUserInteracted) {
+    if (!this.isUserInteracted || this.isSoundMuted) {
       this.currentChapter = chapterId;
       return;
     }
@@ -110,7 +191,7 @@ const ChapterMusicManager = {
     const chapterData = this.audioElements.get(chapterId);
     if (!chapterData) return;
     
-    // Si c'est le même chapitre, ne rien faire
+    // Si c'est le même chapitre et qu'il joue déjà, ne rien faire
     if (this.currentAudio === chapterData.audio && !chapterData.audio.paused) {
       return;
     }
@@ -139,12 +220,52 @@ const ChapterMusicManager = {
   
   stopAllMusic() {
     if (this.currentAudio) {
-      this.fadeTo(this.currentAudio, 0, this.fadeDuration, () => {
-        this.currentAudio.pause();
+      const audioToStop = this.currentAudio;
+      this.fadeTo(audioToStop, 0, this.fadeDuration, () => {
+        audioToStop.pause();
       });
     }
     this.currentChapter = null;
     this.currentAudio = null;
+  },
+  
+  forcePlayIfVisible() {
+    // Trouver le chapitre le plus visible
+    const sections = document.querySelectorAll('.horizontal-section[data-music]');
+    let mostVisibleSection = null;
+    let highestVisibility = 0;
+    
+    sections.forEach(section => {
+      const rect = section.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      
+      const visibleTop = Math.max(0, rect.top);
+      const visibleBottom = Math.min(windowHeight, rect.bottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      const visibilityRatio = visibleHeight / windowHeight;
+      
+      if (visibilityRatio > highestVisibility) {
+        highestVisibility = visibilityRatio;
+        mostVisibleSection = section;
+      }
+    });
+    
+    // Si un chapitre est visible à plus de 50%, lancer sa musique
+    if (mostVisibleSection && highestVisibility >= 0.5) {
+      const chapterData = this.audioElements.get(mostVisibleSection.id);
+      if (chapterData) {
+        const { audio, startTime, targetVolume } = chapterData;
+        
+        // Reset et jouer
+        audio.currentTime = startTime;
+        audio.volume = 0;
+        audio.play().catch(() => {});
+        this.fadeTo(audio, targetVolume, this.fadeDuration);
+        
+        this.currentAudio = audio;
+        this.currentChapter = mostVisibleSection.id;
+      }
+    }
   }
 };
 
@@ -182,18 +303,6 @@ function initHorizontalSections() {
       scrub: 1,
       invalidateOnRefresh: true,
       anticipatePin: 1,
-      onEnter: () => {
-        ChapterMusicManager.playChapterMusic(section.id);
-      },
-      onEnterBack: () => {
-        ChapterMusicManager.playChapterMusic(section.id);
-      },
-      onLeave: () => {
-        // Optionnel: arrêter la musique en quittant
-      },
-      onLeaveBack: () => {
-        // Optionnel: arrêter la musique en quittant vers le haut
-      }
     });
     
     // Animation d'apparition des blocs
@@ -286,17 +395,33 @@ function initNavigation() {
       const navbar = document.querySelector('.navbar');
       if (navbar) navbar.classList.remove('open');
       
-      // Utiliser Lenis pour le smooth scroll
-      lenis.scrollTo(targetSection, {
-        duration: 2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      });
+      // Trouver le ScrollTrigger associé à cette section
+      const triggers = ScrollTrigger.getAll();
+      const sectionTrigger = triggers.find(t => t.trigger === targetSection);
+      
+      if (sectionTrigger) {
+        // Utiliser la position de début du ScrollTrigger (toujours correcte)
+        lenis.scrollTo(sectionTrigger.start, {
+          duration: 2,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        });
+      } else {
+        // Fallback si le trigger n'est pas trouvé
+        const rect = targetSection.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const targetPosition = rect.top + scrollTop;
+        
+        lenis.scrollTo(targetPosition, {
+          duration: 2,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        });
+      }
     });
   });
 }
 
 // ============================================
-// PARALLAX LAYERS
+// PARALLAX LAYERS (basé sur le scroll)
 // ============================================
 function initParallaxLayers() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -309,73 +434,83 @@ function initParallaxLayers() {
     
     if (allBgs.length === 0 && allMains.length === 0) return;
 
-    const BG_STRENGTH = 30;
-    const MAIN_STRENGTH = 60;
+    // Intensité du parallax (en pixels)
+    const BG_STRENGTH = 100;   // Le bg bouge moins
+    const MAIN_STRENGTH = 200; // Le main bouge plus (effet de profondeur)
 
-    let targetX = 0;
-    let currentX = 0;
-    const ease = 0.05;
-    let isInView = false;
+    // Trouver le ScrollTrigger de cette section
+    const track = section.querySelector('.horizontal-track');
+    if (!track) return;
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        isInView = entry.isIntersecting;
-      });
-    }, { threshold: 0.1 });
-    
-    observer.observe(section);
+    const getScrollAmount = () => {
+      return track.scrollWidth - window.innerWidth;
+    };
 
-    function onMove(e) {
-      if (!isInView) return;
-      
-      const cx = window.innerWidth / 2;
-      const x = (e.clientX - cx) / cx;
-      targetX = Math.max(-1, Math.min(1, x));
-    }
-
-    document.addEventListener('mousemove', onMove);
-
-    function animate() {
-      if (isInView) {
-        currentX += (targetX - currentX) * ease;
-
+    // Créer le parallax basé sur le scroll
+    ScrollTrigger.create({
+      trigger: section,
+      start: 'top top',
+      end: () => `+=${getScrollAmount()}`,
+      scrub: 0.5,
+      onUpdate: (self) => {
+        // self.progress va de 0 à 1
+        const progress = self.progress;
+        
+        // Convertir progress en valeur de -1 à 1 pour le déplacement
+        // Au début (0) : décalage vers la droite (+)
+        // À la fin (1) : décalage vers la gauche (-)
+        const offset = (0.5 - progress) * 2; // Va de 1 à -1
+        
         allBgs.forEach(bg => {
-          bg.style.transform = `translate3d(${-currentX * BG_STRENGTH}px, 0, 0)`;
+          bg.style.transform = `translate3d(${offset * BG_STRENGTH}px, 0, 0)`;
         });
+        
         allMains.forEach(main => {
-          main.style.transform = `translate3d(calc(-50% + ${currentX * MAIN_STRENGTH}px), 0, 0)`;
+          main.style.transform = `translate3d(calc(-50% + ${offset * MAIN_STRENGTH}px), 0, 0)`;
         });
       }
-      requestAnimationFrame(animate);
-    }
-
-    animate();
+    });
   });
 }
 
 // ============================================
 // MENU BURGER
 // ============================================
+let isInHeroSection = true; // Par défaut on est dans la hero section
+
 function initNavbar() {
   const navbar = document.querySelector('.navbar');
   const burgerIcon = document.querySelector('.burger-icon');
 
   if (navbar) {
     navbar.addEventListener('mouseenter', () => navbar.classList.add('open'));
-    navbar.addEventListener('mouseleave', () => navbar.classList.remove('open'));
+    navbar.addEventListener('mouseleave', () => {
+      // Ne pas fermer si on est dans la hero section
+      if (!isInHeroSection) {
+        navbar.classList.remove('open');
+      }
+    });
 
     if (window.innerWidth <= 768 && burgerIcon) {
       burgerIcon.addEventListener('click', (e) => {
         e.stopPropagation();
+        // Ne pas permettre de fermer si on est dans la hero section
+        if (isInHeroSection) return;
         navbar.classList.toggle('open');
       });
 
       document.querySelectorAll('.nav-links a').forEach(link => {
-        link.addEventListener('click', () => navbar.classList.remove('open'));
+        link.addEventListener('click', () => {
+          if (!isInHeroSection) {
+            navbar.classList.remove('open');
+          }
+        });
       });
 
       document.addEventListener('click', (e) => {
-        if (!navbar.contains(e.target)) navbar.classList.remove('open');
+        if (!navbar.contains(e.target) && !isInHeroSection) {
+          navbar.classList.remove('open');
+        }
       });
     }
   }
@@ -388,12 +523,8 @@ function initSoundToggle() {
   const soundToggle = document.querySelector('.sound-toggle');
   
   if (soundToggle) {
-    // Charger l'état du son depuis le localStorage
-    const isMuted = localStorage.getItem('soundMuted') === 'true';
-    if (isMuted) {
-      soundToggle.classList.add('muted');
-      ChapterMusicManager.isSoundMuted = true;
-    }
+    // Par défaut muté (la classe .muted est déjà dans le HTML)
+    ChapterMusicManager.isSoundMuted = true;
     
     soundToggle.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -401,19 +532,72 @@ function initSoundToggle() {
       
       const isMuted = soundToggle.classList.contains('muted');
       ChapterMusicManager.isSoundMuted = isMuted;
-      localStorage.setItem('soundMuted', isMuted);
       
-      // Mettre à jour la musique en cours
-      if (ChapterMusicManager.currentAudio) {
-        if (isMuted) {
-          ChapterMusicManager.fadeTo(ChapterMusicManager.currentAudio, 0, 500);
-        } else {
-          const targetVolume = ChapterMusicManager.audioElements.get(ChapterMusicManager.currentChapter)?.targetVolume || 0.6;
-          ChapterMusicManager.fadeTo(ChapterMusicManager.currentAudio, targetVolume, 500);
+      if (isMuted) {
+        // Couper le son
+        if (ChapterMusicManager.currentAudio) {
+          ChapterMusicManager.fadeTo(ChapterMusicManager.currentAudio, 0, 500, () => {
+            ChapterMusicManager.currentAudio.pause();
+          });
         }
+      } else {
+        // Activer le son - forcer la vérification et le lancement
+        ChapterMusicManager.isUserInteracted = true;
+        ChapterMusicManager.forcePlayIfVisible();
       }
     });
   }
+}
+
+// ============================================
+// NAVBAR AUTO-CLOSE ON CHAPTER 1
+// ============================================
+function initNavbarAutoClose() {
+  const navbar = document.querySelector('.navbar');
+  const chapitre1 = document.getElementById('chapitre1');
+  
+  if (!navbar || !chapitre1) return;
+  
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      // Quand le chapitre 1 est visible à plus de 50%, on n'est plus dans la hero section
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+        isInHeroSection = false;
+        navbar.classList.remove('open');
+      } else if (entry.intersectionRatio < 0.5) {
+        // Vérifier si on est de retour dans la hero section (chapitre 1 peu visible depuis le haut)
+        const rect = chapitre1.getBoundingClientRect();
+        if (rect.top > window.innerHeight * 0.5) {
+          // On est au-dessus du chapitre 1, donc dans la hero section
+          isInHeroSection = true;
+          navbar.classList.add('open');
+        }
+      }
+    });
+  }, {
+    threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+  });
+  
+  observer.observe(chapitre1);
+  
+  // Aussi écouter le scroll pour une détection plus précise
+  lenis.on('scroll', () => {
+    const rect = chapitre1.getBoundingClientRect();
+    const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
+    const visibilityRatio = visibleHeight / window.innerHeight;
+    
+    if (visibilityRatio >= 0.5) {
+      if (isInHeroSection) {
+        isInHeroSection = false;
+        navbar.classList.remove('open');
+      }
+    } else if (rect.top > window.innerHeight * 0.5) {
+      if (!isInHeroSection) {
+        isInHeroSection = true;
+        navbar.classList.add('open');
+      }
+    }
+  });
 }
 
 // ============================================
@@ -493,15 +677,382 @@ function initSmoothCarousels() {
 }
 
 // ============================================
+// HOVER AUDIO SUR NAVBAR
+// ============================================
+function initHoverAudio() {
+  const HOVER_FADE_MS = 600;
+  const TARGET_VOLUME = 0.5;
+  const audioMap = new Map();
+  let audioUnlocked = false;
+  let chapterVolumeBeforeHover = 0;
+
+  function createAudioElement(src) {
+    const a = new Audio(src);
+    a.preload = 'auto';
+    a.loop = true;
+    a.volume = 0;
+    return a;
+  }
+
+  function fadeTo(audio, toVolume, duration, cb) {
+    if (!audio) return;
+    if (audio._fadeTimer) clearInterval(audio._fadeTimer);
+    
+    const from = audio.volume;
+    const steps = Math.max(1, Math.round(duration / 40));
+    const stepDelta = (toVolume - from) / steps;
+    let currentStep = 0;
+    
+    audio._fadeTimer = setInterval(() => {
+      currentStep++;
+      audio.volume = Math.min(1, Math.max(0, audio.volume + stepDelta));
+      if (currentStep >= steps) {
+        clearInterval(audio._fadeTimer);
+        audio._fadeTimer = null;
+        audio.volume = toVolume;
+        if (cb) cb();
+      }
+    }, 40);
+  }
+
+  function onEnter(e) {
+    // Ne pas jouer si le son global est muté
+    if (ChapterMusicManager.isSoundMuted) return;
+    
+    const el = e.currentTarget;
+    const audioSrc = el.getAttribute('data-audio');
+    if (!audioSrc) return;
+    
+    // Mettre en pause la musique du chapitre avec fade
+    if (ChapterMusicManager.currentAudio && !ChapterMusicManager.currentAudio.paused) {
+      chapterVolumeBeforeHover = ChapterMusicManager.currentAudio.volume;
+      ChapterMusicManager.fadeTo(ChapterMusicManager.currentAudio, 0, HOVER_FADE_MS);
+    }
+    
+    let entry = audioMap.get(el);
+
+    if (!entry || entry.src !== audioSrc) {
+      if (entry?.audio) {
+        clearInterval(entry.audio._fadeTimer);
+        entry.audio.pause();
+      }
+      entry = { audio: createAudioElement(audioSrc), src: audioSrc };
+      audioMap.set(el, entry);
+    }
+
+    const audio = entry.audio;
+    const startTime = parseFloat(el.getAttribute('data-start-time')) || 0;
+    if (startTime > 0 && audio.readyState >= 1) {
+      audio.currentTime = startTime;
+    }
+
+    let targetVolume = parseFloat(el.getAttribute('data-volume')) || TARGET_VOLUME;
+    targetVolume = Math.max(0, Math.min(1, targetVolume));
+
+    if (audio.paused) audio.play().catch(() => {});
+    fadeTo(audio, targetVolume, HOVER_FADE_MS);
+  }
+
+  function onLeave(e) {
+    // Ne rien faire si le son global est muté
+    if (ChapterMusicManager.isSoundMuted) return;
+    
+    const entry = audioMap.get(e.currentTarget);
+    if (entry?.audio) {
+      fadeTo(entry.audio, 0, HOVER_FADE_MS, () => {
+        entry.audio.pause();
+        entry.audio.currentTime = 0;
+      });
+    }
+    
+    // Reprendre la musique du chapitre avec fade
+    if (ChapterMusicManager.currentAudio && ChapterMusicManager.currentChapter) {
+      const targetVolume = ChapterMusicManager.audioElements.get(ChapterMusicManager.currentChapter)?.targetVolume || 0.6;
+      ChapterMusicManager.fadeTo(ChapterMusicManager.currentAudio, targetVolume, HOVER_FADE_MS);
+    }
+  }
+
+  const hoverTargets = document.querySelectorAll('.nav-links a[data-audio]');
+  hoverTargets.forEach(t => {
+    t.addEventListener('mouseenter', onEnter);
+    t.addEventListener('mouseleave', onLeave);
+  });
+
+  // Débloquer l'audio au premier clic/toucher
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    hoverTargets.forEach(el => {
+      const src = el.getAttribute('data-audio');
+      if (!src) return;
+      if (!audioMap.has(el)) {
+        audioMap.set(el, { audio: createAudioElement(src), src });
+      }
+      const audio = audioMap.get(el).audio;
+      audio.muted = true;
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.muted = false;
+      }).catch(() => {});
+    });
+  }
+
+  document.addEventListener('pointerdown', unlockAudio, { once: true });
+  document.addEventListener('keydown', unlockAudio, { once: true });
+}
+
+// ============================================
+// TRANSITION RIDEAU (Animation automatique)
+// ============================================
+function initCurtainTransition() {
+  const curtainOverlay = document.querySelector('.curtain-overlay');
+  const header = document.querySelector('header');
+  const chapitre1 = document.getElementById('chapitre1');
+  
+  if (!curtainOverlay || !header || !chapitre1) return;
+  
+  const curtainLeft = curtainOverlay.querySelector('.curtain-left');
+  const curtainRight = curtainOverlay.querySelector('.curtain-right');
+  const curtainContent = curtainOverlay.querySelector('.curtain-content');
+  
+  if (!curtainLeft || !curtainRight) return;
+  
+  let isAnimating = false;
+  let currentSection = 'hero';
+  
+  // S'assurer que les rideaux sont ouverts au départ
+  gsap.set(curtainLeft, { x: '-100%' });
+  gsap.set(curtainRight, { x: '100%' });
+  gsap.set(curtainContent, { opacity: 0, scale: 0.8 });
+  
+  // Fonction pour obtenir la position de début du chapitre 1
+  function getChapter1Start() {
+    const triggers = ScrollTrigger.getAll();
+    const chapter1Trigger = triggers.find(t => t.trigger === chapitre1);
+    return chapter1Trigger ? chapter1Trigger.start : chapitre1.offsetTop;
+  }
+  
+  // Synchroniser avec la variable globale
+  curtainTransitionState.getChapter1Start = getChapter1Start;
+  
+  // Animation vers le chapitre 1
+  function goToChapter1() {
+    if (isAnimating) return;
+    isAnimating = true;
+    curtainTransitionState.isAnimating = true;
+    lenis.stop();
+    
+    // Trouver la position du chapitre 1 AVANT l'animation
+    const targetPosition = getChapter1Start();
+    
+    const tl = gsap.timeline({
+      onComplete: () => {
+        // Attendre un peu avant de réactiver le scroll pour éviter le rollback
+        setTimeout(() => {
+          // Re-téléporter pour être sûr d'être à la bonne position
+          window.scrollTo(0, targetPosition);
+          ScrollTrigger.refresh();
+          
+          setTimeout(() => {
+            isAnimating = false;
+            curtainTransitionState.isAnimating = false;
+            lenis.start();
+          }, 50);
+        }, 50);
+      }
+    });
+    
+    // Phase 1: Fermer les rideaux
+    tl.to(curtainLeft, { x: '0%', duration: 0.5, ease: 'power2.inOut' }, 0)
+      .to(curtainRight, { x: '0%', duration: 0.5, ease: 'power2.inOut' }, 0)
+      .to(curtainContent, { opacity: 1, scale: 1, duration: 0.3, ease: 'power2.out' }, 0.3)
+      
+      // Phase 2: Téléportation (rideaux fermés) - à 0.6s
+      .call(() => {
+        document.body.classList.remove('in-hero');
+        window.scrollTo(0, targetPosition);
+        currentSection = 'chapitre1';
+        curtainTransitionState.currentSection = 'chapitre1';
+        isInHeroSection = false;
+        
+        const navbar = document.querySelector('.navbar');
+        if (navbar) navbar.classList.remove('open');
+      }, null, 0.6)
+      
+      // Phase 3: Pause avec texte visible
+      .to({}, { duration: 0.3 })
+      
+      // Phase 4: Ouvrir les rideaux
+      .to(curtainContent, { opacity: 0, scale: 1.1, duration: 0.2, ease: 'power2.in' })
+      .to(curtainLeft, { x: '-100%', duration: 0.5, ease: 'power2.inOut' }, '-=0.1')
+      .to(curtainRight, { x: '100%', duration: 0.5, ease: 'power2.inOut' }, '<');
+  }
+  
+  // Animation vers la hero
+  function goToHero() {
+    if (isAnimating) return;
+    isAnimating = true;
+    curtainTransitionState.isAnimating = true;
+    lenis.stop();
+    
+    const tl = gsap.timeline({
+      onComplete: () => {
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          ScrollTrigger.refresh();
+          
+          setTimeout(() => {
+            isAnimating = false;
+            curtainTransitionState.isAnimating = false;
+            lenis.start();
+          }, 50);
+        }, 50);
+      }
+    });
+    
+    // Phase 1: Fermer les rideaux
+    tl.to(curtainLeft, { x: '0%', duration: 0.5, ease: 'power2.inOut' }, 0)
+      .to(curtainRight, { x: '0%', duration: 0.5, ease: 'power2.inOut' }, 0)
+      .to(curtainContent, { opacity: 1, scale: 1, duration: 0.3, ease: 'power2.out' }, 0.3)
+      
+      // Phase 2: Téléportation (rideaux fermés) - à 0.6s
+      .call(() => {
+        window.scrollTo(0, 0);
+        currentSection = 'hero';
+        curtainTransitionState.currentSection = 'hero';
+        isInHeroSection = true;
+        document.body.classList.add('in-hero');
+        
+        const navbar = document.querySelector('.navbar');
+        if (navbar) navbar.classList.add('open');
+      }, null, 0.6)
+      
+      // Phase 3: Pause avec texte visible
+      .to({}, { duration: 0.3 })
+      
+      // Phase 4: Ouvrir les rideaux
+      .to(curtainContent, { opacity: 0, scale: 1.1, duration: 0.2, ease: 'power2.in' })
+      .to(curtainLeft, { x: '-100%', duration: 0.5, ease: 'power2.inOut' }, '-=0.1')
+      .to(curtainRight, { x: '100%', duration: 0.5, ease: 'power2.inOut' }, '<');
+  }
+  
+  // Écouter la molette - bloquer le scroll vers le haut au début du chapitre 1
+  window.addEventListener('wheel', (e) => {
+    // Toujours bloquer pendant l'animation
+    if (isAnimating) {
+      e.preventDefault();
+      return;
+    }
+    
+    // Si on est dans la hero et scroll vers le bas → aller au chapitre 1
+    if (currentSection === 'hero' && e.deltaY > 0) {
+      e.preventDefault();
+      goToChapter1();
+      return;
+    }
+    
+    // Si on est au début du chapitre 1 et scroll vers le haut
+    if (currentSection === 'chapitre1' && e.deltaY < 0) {
+      const scrollY = window.scrollY;
+      const chapter1Start = getChapter1Start();
+      
+      // Zone de protection : bloquer tout scroll vers le haut dans les 100 premiers pixels
+      if (scrollY <= chapter1Start + 100) {
+        e.preventDefault();
+        
+        // Si vraiment au début, lancer l'animation
+        if (scrollY <= chapter1Start + 20) {
+          goToHero();
+        }
+        return;
+      }
+    }
+  }, { passive: false });
+  
+  // Intercepter aussi le scroll natif pour bloquer complètement
+  window.addEventListener('scroll', () => {
+    if (isAnimating) return;
+    
+    if (currentSection === 'chapitre1') {
+      const scrollY = window.scrollY;
+      const chapter1Start = getChapter1Start();
+      
+      // Si on essaie de remonter au-dessus du chapitre 1, bloquer la position
+      if (scrollY < chapter1Start - 5) {
+        window.scrollTo(0, chapter1Start);
+      }
+    }
+  });
+  
+  // Touch pour mobile
+  let touchStartY = 0;
+  let touchHandled = false;
+  
+  window.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+    touchHandled = false;
+  }, { passive: true });
+  
+  window.addEventListener('touchmove', (e) => {
+    if (isAnimating || touchHandled) return;
+    
+    const touchY = e.touches[0].clientY;
+    const deltaY = touchStartY - touchY; // positif = swipe up
+    
+    // Hero → Chapitre 1 (swipe up)
+    if (currentSection === 'hero' && deltaY > 50) {
+      touchHandled = true;
+      goToChapter1();
+      return;
+    }
+    
+    // Chapitre 1 → Hero (swipe down, au début du chapitre)
+    if (currentSection === 'chapitre1' && deltaY < -30) {
+      const scrollY = window.scrollY;
+      const chapter1Start = getChapter1Start();
+      
+      if (scrollY <= chapter1Start + 100) {
+        touchHandled = true;
+        e.preventDefault();
+        goToHero();
+      }
+    }
+  }, { passive: false });
+  
+  // Déterminer la section initiale au chargement
+  setTimeout(() => {
+    const chapter1Start = getChapter1Start();
+    const scrollY = window.scrollY;
+    
+    if (scrollY >= chapter1Start - 100) {
+      currentSection = 'chapitre1';
+      curtainTransitionState.currentSection = 'chapitre1';
+      isInHeroSection = false;
+      document.body.classList.remove('in-hero');
+    } else {
+      currentSection = 'hero';
+      curtainTransitionState.currentSection = 'hero';
+      isInHeroSection = true;
+      document.body.classList.add('in-hero');
+    }
+  }, 200);
+}
+
+// ============================================
 // INITIALISATION
 // ============================================
 function init() {
   ChapterMusicManager.init();
   initHorizontalSections();
+  initCurtainTransition(); // Après initHorizontalSections pour avoir les ScrollTriggers
   initNavigation();
   initParallaxLayers();
   initNavbar();
   initNavIndicator();
+  initSoundToggle();
+  initNavbarAutoClose();
+  initHoverAudio();
   initSmoothCarousels();
 }
 

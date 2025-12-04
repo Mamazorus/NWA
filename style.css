@@ -25,6 +25,11 @@ header {
   background-color: #c6c6c6;
 }
 
+/* Empêcher le scroll quand on est dans la hero */
+body.in-hero {
+  overflow: hidden;
+}
+
 .hero-section {
   width: 100%;
   height: 100vh;
@@ -172,13 +177,15 @@ header {
   bottom: 40px;
   z-index: 9999;
   background-color: #EC1D31;
-  border-radius: 40px;
-  padding: 17px 17px;
+  border-radius: 50%;
+  padding: 17px;
   transition: all 0.5s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  width: 60px;
+  height: 60px;
   max-width: 60px;
   font-family: "mongoose", sans-serif;
   font-weight: 700;
@@ -190,6 +197,8 @@ header {
 .navbar:hover,
 .navbar.open {
   padding: 20px 20px;
+  width: auto;
+  height: auto;
   max-width: 1000px;
   border-radius: 20px;
   background-color: #00000065;
@@ -197,21 +206,33 @@ header {
 }
 
 .burger-icon {
-  width: 25px;
-  height: 25px;
+  /* Conteneur centré pour le SVG du logo */
+  width: 46px;
+  height: 46px;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.2s ease;
   position: absolute;
 }
 
+/* Si tu gardes des spans (3 traits), ils restent stylés mais cachés par défaut */
 .burger-icon span {
   width: 100%;
   height: 3.5px;
   background-color: #61060f;
   border-radius: 1000px;
+  display: none;
+}
+
+/* SVG du logo : garder le ratio et s'adapter au conteneur */
+.burger-icon svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .navbar:hover .burger-icon,
@@ -267,6 +288,65 @@ header {
 
 .nav-links a:hover {
   color: #61060f;
+}
+
+/* ============================================
+   BOUTON MUTE/UNMUTE
+   ============================================ */
+.sound-toggle {
+  background-color: #EC1D31;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #61060f;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  margin: 0;
+}
+
+.navbar:hover .sound-toggle,
+.navbar.open .sound-toggle {
+  opacity: 1;
+  width: 44px;
+  height: 44px;
+  margin-right: 15px;
+}
+
+.sound-toggle svg {
+  width: 22px;
+  height: 22px;
+  transition: transform 0.3s ease;
+}
+
+.sound-toggle .icon-sound-on {
+  display: none;
+}
+
+.sound-toggle .icon-sound-off {
+  display: block;
+}
+
+.sound-toggle:not(.muted) .icon-sound-on {
+  display: block;
+}
+
+.sound-toggle:not(.muted) .icon-sound-off {
+  display: none;
+}
+
+.sound-toggle:hover {
+  color: #FFFFFF;
+}
+
+.sound-toggle:hover svg {
+  transform: scale(1.1);
 }
 
 /* ============================================
@@ -364,7 +444,10 @@ header {
   z-index: 10;
   opacity: 0;
   will-change: transform, opacity;
+  transition: box-shadow 0.3s ease;
 }
+
+
 
 /* Positions Y variées - Chapitre 1 */
 #chapitre1 .content-block:nth-child(1) { transform: translateY(-100px); }
@@ -421,7 +504,7 @@ header {
 }
 
 .content-block p {
-  color: #333;
+  color: #000000;
   font-size: 18px;
   line-height: 1.6;
   margin: 0;
@@ -431,6 +514,83 @@ header {
   -webkit-text-stroke-width: 1px;
   -webkit-text-stroke-color: black;
   text-align: justify;
+}
+
+.definition {
+text-decoration: none;
+  background-image: url('img/graf-under.svg');
+  background-repeat: repeat-x;
+  background-position: 0 100%;
+  background-size: auto 5px; /* Ajuste la hauteur du SVG selon tes besoins */
+  padding-bottom: 4px; /* Espace pour l'underline */
+  cursor: help;
+  color: #000000;
+}
+
+/* ============================================
+   TRANSITION RIDEAU
+   ============================================ */
+.curtain-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 9998; /* Juste en dessous de la navbar */
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.curtain {
+  position: absolute;
+  top: 0;
+  width: 51%; /* Légèrement plus de 50% pour éviter un gap */
+  height: 100%;
+  z-index: 10;
+  will-change: transform;
+}
+
+.curtain-left {
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, #000000 0%, #0a0a0a 100%);
+}
+
+.curtain-right {
+  right: 0;
+  transform: translateX(100%);
+  background: linear-gradient(-90deg, #000000 0%, #0a0a0a 100%);
+}
+
+.curtain-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 15;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.curtain-title {
+  font-family: 'IntegralCF-Bold', sans-serif;
+  font-size: clamp(60px, 15vw, 200px);
+  color: #EC1D31;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 10px;
+  text-shadow: 0 0 40px rgba(236, 29, 49, 0.5);
+}
+
+.curtain-subtitle {
+  font-family: 'mongoose', sans-serif;
+  font-size: clamp(18px, 3vw, 32px);
+  color: #ffffff;
+  margin: 20px 0 0 0;
+  text-transform: uppercase;
+  letter-spacing: 5px;
+  opacity: 0.8;
 }
 
 /* ============================================
