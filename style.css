@@ -594,6 +594,61 @@ text-decoration: none;
 }
 
 /* ============================================
+   TRANSITION NAVIGATION (slide left to right)
+   ============================================ */
+.nav-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 9998;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.nav-transition-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #000000 0%, #0a0a0a 100%);
+  transform: translateX(-100%);
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-transition-content {
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.8);
+  will-change: opacity, transform;
+}
+
+.nav-transition-title {
+  font-family: 'IntegralCF-Bold', sans-serif;
+  font-size: clamp(40px, 10vw, 120px);
+  color: #EC1D31;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 5px;
+  text-shadow: 0 0 40px rgba(236, 29, 49, 0.5);
+}
+
+.nav-transition-subtitle {
+  font-family: 'mongoose', sans-serif;
+  font-size: clamp(16px, 2.5vw, 28px);
+  color: #ffffff;
+  margin: 15px 0 0 0;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  opacity: 0.8;
+}
+
+/* ============================================
    PLACEHOLDER
    ============================================ */
 .placeholder-section {

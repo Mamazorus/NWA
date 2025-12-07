@@ -17,7 +17,9 @@ const lenis = new Lenis({
 let curtainTransitionState = {
   isAnimating: false,
   currentSection: 'hero',
-  getChapter1Start: () => 0
+  getChapter1Start: () => 0,
+  updateSection: null, // Sera définie dans initCurtainTransition
+  justNavigated: false // Flag pour éviter l'animation juste après un clic
 };
 
 // Synchroniser Lenis avec ScrollTrigger
@@ -25,7 +27,10 @@ lenis.on('scroll', (e) => {
   ScrollTrigger.update();
   
   // Bloquer le scroll vers le haut au début du chapitre 1
-  if (!curtainTransitionState.isAnimating && curtainTransitionState.currentSection === 'chapitre1') {
+  // Mais PAS si on vient de naviguer par clic (pour permettre d'aller vers les autres chapitres)
+  if (!curtainTransitionState.isAnimating && 
+      !curtainTransitionState.justNavigated && 
+      curtainTransitionState.currentSection === 'chapitre1') {
     const chapter1Start = curtainTransitionState.getChapter1Start();
     if (e.scroll < chapter1Start) {
       lenis.scrollTo(chapter1Start, { immediate: true });
@@ -382,6 +387,91 @@ function initHorizontalSections() {
 function initNavigation() {
   const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
   
+  // Récupérer les éléments de l'overlay de transition
+  const navTransitionOverlay = document.querySelector('.nav-transition-overlay');
+  const navTransitionPanel = document.querySelector('.nav-transition-panel');
+  const navTransitionContent = document.querySelector('.nav-transition-content');
+  const navTransitionTitle = document.querySelector('.nav-transition-title');
+  const navTransitionSubtitle = document.querySelector('.nav-transition-subtitle');
+  
+  // S'assurer que le panneau est hors écran au départ
+  if (navTransitionPanel) {
+    gsap.set(navTransitionPanel, { x: '-100%' });
+    gsap.set(navTransitionContent, { opacity: 0, scale: 0.8 });
+  }
+  
+  // Fonction pour animer la transition vers un chapitre
+  function navigateToChapterWithTransition(targetSection, chapterName) {
+    if (!navTransitionPanel || !navTransitionContent) return;
+    
+    // Mettre à jour le texte
+    if (navTransitionTitle) navTransitionTitle.textContent = chapterName;
+    if (navTransitionSubtitle) navTransitionSubtitle.textContent = 'Loading...';
+    
+    // Stopper le scroll
+    lenis.stop();
+    
+    // Trouver le ScrollTrigger de la section cible
+    const triggers = ScrollTrigger.getAll();
+    const sectionTrigger = triggers.find(t => t.trigger === targetSection);
+    const targetPosition = sectionTrigger ? sectionTrigger.start : targetSection.offsetTop;
+    
+    // Timeline d'animation
+    const tl = gsap.timeline({
+      onComplete: () => {
+        // Redémarrer le scroll après un court délai
+        setTimeout(() => {
+          lenis.start();
+        }, 100);
+      }
+    });
+    
+    // Phase 1: Slide in depuis la gauche (0 → 0.6s)
+    tl.to(navTransitionPanel, { 
+      x: '0%', 
+      duration: 0.6, 
+      ease: 'power2.inOut' 
+    }, 0)
+    
+    // Phase 2: Afficher le contenu (0.3 → 0.6s)
+    .to(navTransitionContent, { 
+      opacity: 1, 
+      scale: 1, 
+      duration: 0.3, 
+      ease: 'power2.out' 
+    }, 0.3)
+    
+    // Phase 3: Téléportation (à 0.7s, quand le panneau recouvre tout)
+    .call(() => {
+      window.scrollTo(0, targetPosition);
+      ScrollTrigger.refresh();
+    }, null, 0.7)
+    
+    // Phase 4: Petite pause (0.7 → 1.0s)
+    .to({}, { duration: 0.3 })
+    
+    // Phase 5: Masquer le contenu (1.0 → 1.2s)
+    .to(navTransitionContent, { 
+      opacity: 0, 
+      scale: 1.1, 
+      duration: 0.2, 
+      ease: 'power2.in' 
+    }, 1.0)
+    
+    // Phase 6: Slide out vers la droite (1.1 → 1.7s)
+    .to(navTransitionPanel, { 
+      x: '100%', 
+      duration: 0.6, 
+      ease: 'power2.inOut' 
+    }, 1.1)
+    
+    // Phase 7: Reset (à la fin)
+    .call(() => {
+      gsap.set(navTransitionPanel, { x: '-100%' });
+      gsap.set(navTransitionContent, { opacity: 0, scale: 0.8 });
+    }, null, 1.8);
+  }
+  
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
@@ -395,27 +485,28 @@ function initNavigation() {
       const navbar = document.querySelector('.navbar');
       if (navbar) navbar.classList.remove('open');
       
-      // Trouver le ScrollTrigger associé à cette section
-      const triggers = ScrollTrigger.getAll();
-      const sectionTrigger = triggers.find(t => t.trigger === targetSection);
+      // Récupérer le nom du chapitre depuis le texte du lien
+      const chapterName = link.textContent.trim();
       
-      if (sectionTrigger) {
-        // Utiliser la position de début du ScrollTrigger (toujours correcte)
-        lenis.scrollTo(sectionTrigger.start, {
-          duration: 2,
-          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        });
-      } else {
-        // Fallback si le trigger n'est pas trouvé
-        const rect = targetSection.getBoundingClientRect();
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const targetPosition = rect.top + scrollTop;
+      // Si on navigue depuis la hero vers un chapitre, mettre à jour l'état
+      if (curtainTransitionState.currentSection === 'hero' && targetId.startsWith('#chapitre')) {
+        // Utiliser la fonction d'update si elle existe, sinon fallback
+        if (curtainTransitionState.updateSection) {
+          curtainTransitionState.updateSection('chapitre1'); // On est sorti de la hero, donc on est dans la zone chapitres
+        } else {
+          curtainTransitionState.currentSection = 'chapitre1';
+          document.body.classList.remove('in-hero');
+        }
         
-        lenis.scrollTo(targetPosition, {
-          duration: 2,
-          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        });
+        // Désactiver temporairement l'animation de rideau
+        curtainTransitionState.justNavigated = true;
+        setTimeout(() => {
+          curtainTransitionState.justNavigated = false;
+        }, 3000); // Désactiver après 3 secondes (durée du smooth scroll + marge)
       }
+      
+      // Lancer l'animation de transition
+      navigateToChapterWithTransition(targetSection, chapterName);
     });
   });
 }
@@ -821,6 +912,22 @@ function initCurtainTransition() {
   let isAnimating = false;
   let currentSection = 'hero';
   
+  // Fonction pour synchroniser les états
+  function updateCurrentSection(newSection) {
+    currentSection = newSection;
+    curtainTransitionState.currentSection = newSection;
+    isInHeroSection = (newSection === 'hero');
+    
+    if (isInHeroSection) {
+      document.body.classList.add('in-hero');
+    } else {
+      document.body.classList.remove('in-hero');
+    }
+  }
+  
+  // Exposer la fonction globalement
+  curtainTransitionState.updateSection = updateCurrentSection;
+  
   // S'assurer que les rideaux sont ouverts au départ
   gsap.set(curtainLeft, { x: '-100%' });
   gsap.set(curtainRight, { x: '100%' });
@@ -870,11 +977,8 @@ function initCurtainTransition() {
       
       // Phase 2: Téléportation (rideaux fermés) - à 0.6s
       .call(() => {
-        document.body.classList.remove('in-hero');
+        updateCurrentSection('chapitre1');
         window.scrollTo(0, targetPosition);
-        currentSection = 'chapitre1';
-        curtainTransitionState.currentSection = 'chapitre1';
-        isInHeroSection = false;
         
         const navbar = document.querySelector('.navbar');
         if (navbar) navbar.classList.remove('open');
@@ -918,11 +1022,8 @@ function initCurtainTransition() {
       
       // Phase 2: Téléportation (rideaux fermés) - à 0.6s
       .call(() => {
+        updateCurrentSection('hero');
         window.scrollTo(0, 0);
-        currentSection = 'hero';
-        curtainTransitionState.currentSection = 'hero';
-        isInHeroSection = true;
-        document.body.classList.add('in-hero');
         
         const navbar = document.querySelector('.navbar');
         if (navbar) navbar.classList.add('open');
@@ -942,6 +1043,11 @@ function initCurtainTransition() {
     // Toujours bloquer pendant l'animation
     if (isAnimating) {
       e.preventDefault();
+      return;
+    }
+    
+    // Ne pas déclencher d'animation si on vient de naviguer par clic
+    if (curtainTransitionState.justNavigated) {
       return;
     }
     
@@ -997,6 +1103,9 @@ function initCurtainTransition() {
   window.addEventListener('touchmove', (e) => {
     if (isAnimating || touchHandled) return;
     
+    // Ne pas déclencher d'animation si on vient de naviguer par clic
+    if (curtainTransitionState.justNavigated) return;
+    
     const touchY = e.touches[0].clientY;
     const deltaY = touchStartY - touchY; // positif = swipe up
     
@@ -1026,15 +1135,9 @@ function initCurtainTransition() {
     const scrollY = window.scrollY;
     
     if (scrollY >= chapter1Start - 100) {
-      currentSection = 'chapitre1';
-      curtainTransitionState.currentSection = 'chapitre1';
-      isInHeroSection = false;
-      document.body.classList.remove('in-hero');
+      updateCurrentSection('chapitre1');
     } else {
-      currentSection = 'hero';
-      curtainTransitionState.currentSection = 'hero';
-      isInHeroSection = true;
-      document.body.classList.add('in-hero');
+      updateCurrentSection('hero');
     }
   }, 200);
 }
