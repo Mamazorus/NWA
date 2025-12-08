@@ -1,4 +1,116 @@
 // ============================================
+// ECRAN D'ENTRÉE (Splash Screen)
+// ============================================
+function initEntryScreen() {
+  const entryOverlay = document.querySelector('.entry-overlay');
+  const entryButton = document.querySelector('.entry-button');
+  const body = document.body;
+  
+  if (!entryOverlay || !entryButton) return;
+  
+  // Bloquer le scroll (Lenis) tant qu'on n'a pas cliqué
+  lenis.stop();
+  
+  entryButton.addEventListener('click', () => {
+    // 1. Activer la musique
+    ChapterMusicManager.isUserInteracted = true;
+    ChapterMusicManager.isSoundMuted = false;
+    
+    // Précharger et préparer les audios
+    ChapterMusicManager.audioElements.forEach(({ audio }) => {
+      audio.muted = true;
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.muted = false;
+      }).catch(() => {});
+    });
+    
+    // Mettre à jour le bouton son
+    const soundToggle = document.querySelector('.sound-toggle');
+    if (soundToggle) {
+      soundToggle.classList.remove('muted');
+    }
+    
+    // 2. Désactiver les clics sur l'overlay
+    entryOverlay.classList.add('hidden');
+    
+    // 3. Animer l'entrée des personnages
+    animateCarouselEntry();
+    
+    // 4. Débloquer le scroll une fois l'animation bien lancée
+    setTimeout(() => {
+      lenis.start();
+    }, 1800);
+  });
+}
+
+function animateCarouselEntry() {
+  const body = document.body;
+  const navbar = document.querySelector('.navbar');
+  const entryContent = document.querySelector('.entry-content');
+  
+  // Récupérer toutes les cartes des deux rangées
+  const backRowCards = document.querySelectorAll('.back-row .person-card');
+  const frontRowCards = document.querySelectorAll('.front-row .person-card');
+  const allCards = [...backRowCards, ...frontRowCards];
+  
+  // Timeline principale
+  const tl = gsap.timeline({
+    onComplete: () => {
+      const entryOverlay = document.querySelector('.entry-overlay');
+      if (entryOverlay) entryOverlay.remove();
+      ChapterMusicManager.checkVisibleChapter();
+    }
+  });
+  
+  // Phase 1 : Disparition du contenu d'entrée
+  tl.to(entryContent, {
+    opacity: 0,
+    scale: 0.9,
+    duration: 0.5,
+    ease: 'power2.in'
+  });
+  
+  // Préparer les éléments (cachés) - seulement opacity, pas de transform
+  gsap.set(allCards, { opacity: 0 });
+  gsap.set(navbar, { opacity: 0 });
+  
+  // Retirer site-locked
+  body.classList.remove('site-locked');
+  
+  // Phase 2 : Fade in de la rangée arrière depuis le centre
+  tl.to(backRowCards, {
+    opacity: 1,
+    duration: 0.8,
+    ease: 'power1.out',
+    stagger: {
+      each: 0.06,
+      from: 'center'
+    }
+  }, '-=0.1');
+  
+  // Phase 3 : Fade in de la rangée avant
+  tl.to(frontRowCards, {
+    opacity: 1,
+    duration: 0.8,
+    ease: 'power1.out',
+    stagger: {
+      each: 0.08,
+      from: 'center'
+    }
+  }, '-=0.6');
+  
+  // Phase 4 : Navbar - rapide et direct
+  tl.to(navbar, {
+    opacity: 1,
+    duration: 0.4,
+    ease: 'power1.out',
+    clearProps: 'opacity'
+  }, '-=0.3');
+}
+
+// ============================================
 // GSAP + ScrollTrigger + ScrollToPlugin
 // ============================================
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
@@ -863,10 +975,27 @@ function initHoverAudio() {
     }
   }
 
+  // Arrêter la musique de hover au clic (avant la navigation)
+  function onClick(e) {
+    const entry = audioMap.get(e.currentTarget);
+    if (entry?.audio) {
+      // Arrêter immédiatement la musique de hover
+      if (entry.audio._fadeTimer) clearInterval(entry.audio._fadeTimer);
+      fadeTo(entry.audio, 0, 300, () => {
+        entry.audio.pause();
+        entry.audio.currentTime = 0;
+      });
+    }
+    
+    // Ne pas reprendre la musique du chapitre actuel car on va changer de chapitre
+    // La nouvelle musique du chapitre sera gérée par ChapterMusicManager
+  }
+
   const hoverTargets = document.querySelectorAll('.nav-links a[data-audio]');
   hoverTargets.forEach(t => {
     t.addEventListener('mouseenter', onEnter);
     t.addEventListener('mouseleave', onLeave);
+    t.addEventListener('click', onClick);
   });
 
   // Débloquer l'audio au premier clic/toucher
@@ -1146,6 +1275,7 @@ function initCurtainTransition() {
 // INITIALISATION
 // ============================================
 function init() {
+  initEntryScreen(); // IMPORTANT: Doit être appelé en premier
   ChapterMusicManager.init();
   initHorizontalSections();
   initCurtainTransition(); // Après initHorizontalSections pour avoir les ScrollTriggers
