@@ -513,7 +513,7 @@ body.in-hero {
   text-transform: uppercase;
   -webkit-text-stroke-width: 1px;
   -webkit-text-stroke-color: black;
-  text-align: justify;
+  text-align: left;
 }
 
 .definition {
@@ -815,6 +815,11 @@ body::-webkit-scrollbar {
 
 /* État initial : masquer carrousel et navbar quand site-locked */
 body.site-locked {
+  overflow: hidden !important;
+  position: relative;
+}
+
+html:has(body.site-locked) {
   overflow: hidden !important;
 }
 

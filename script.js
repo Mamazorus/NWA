@@ -1,15 +1,35 @@
 // ============================================
 // ECRAN D'ENTRÉE (Splash Screen)
 // ============================================
+let siteUnlocked = false;
+
+function preventScroll(e) {
+  if (!siteUnlocked) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+}
+
 function initEntryScreen() {
   const entryOverlay = document.querySelector('.entry-overlay');
   const entryButton = document.querySelector('.entry-button');
   const body = document.body;
   
-  if (!entryOverlay || !entryButton) return;
+  if (!entryOverlay || !entryButton) {
+    siteUnlocked = true;
+    return;
+  }
   
-  // Bloquer le scroll (Lenis) tant qu'on n'a pas cliqué
+  // Bloquer le scroll (Lenis + events natifs)
   lenis.stop();
+  window.addEventListener('wheel', preventScroll, { passive: false });
+  window.addEventListener('touchmove', preventScroll, { passive: false });
+  window.addEventListener('keydown', (e) => {
+    if (!siteUnlocked && ['ArrowUp', 'ArrowDown', 'Space', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.code)) {
+      e.preventDefault();
+    }
+  });
   
   entryButton.addEventListener('click', () => {
     // 1. Activer la musique
@@ -40,6 +60,10 @@ function initEntryScreen() {
     
     // 4. Débloquer le scroll une fois l'animation bien lancée
     setTimeout(() => {
+      siteUnlocked = true;
+      body.classList.remove('site-locked');
+      window.removeEventListener('wheel', preventScroll);
+      window.removeEventListener('touchmove', preventScroll);
       lenis.start();
     }, 1800);
   });
@@ -1074,7 +1098,7 @@ function initCurtainTransition() {
   
   // Animation vers le chapitre 1
   function goToChapter1() {
-    if (isAnimating) return;
+    if (isAnimating || !siteUnlocked) return;
     isAnimating = true;
     curtainTransitionState.isAnimating = true;
     lenis.stop();
@@ -1124,7 +1148,7 @@ function initCurtainTransition() {
   
   // Animation vers la hero
   function goToHero() {
-    if (isAnimating) return;
+    if (isAnimating || !siteUnlocked) return;
     isAnimating = true;
     curtainTransitionState.isAnimating = true;
     lenis.stop();
@@ -1169,6 +1193,12 @@ function initCurtainTransition() {
   
   // Écouter la molette - bloquer le scroll vers le haut au début du chapitre 1
   window.addEventListener('wheel', (e) => {
+    // Bloquer si le site n'est pas encore débloqué
+    if (!siteUnlocked) {
+      e.preventDefault();
+      return;
+    }
+    
     // Toujours bloquer pendant l'animation
     if (isAnimating) {
       e.preventDefault();
@@ -1207,7 +1237,7 @@ function initCurtainTransition() {
   
   // Intercepter aussi le scroll natif pour bloquer complètement
   window.addEventListener('scroll', () => {
-    if (isAnimating) return;
+    if (!siteUnlocked || isAnimating) return;
     
     if (currentSection === 'chapitre1') {
       const scrollY = window.scrollY;
@@ -1230,6 +1260,9 @@ function initCurtainTransition() {
   }, { passive: true });
   
   window.addEventListener('touchmove', (e) => {
+    // Bloquer si le site n'est pas encore débloqué
+    if (!siteUnlocked) return;
+    
     if (isAnimating || touchHandled) return;
     
     // Ne pas déclencher d'animation si on vient de naviguer par clic
