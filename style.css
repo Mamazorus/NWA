@@ -602,9 +602,9 @@ body.in-hero {
 
 .content-block {
   flex-shrink: 0;
-  width: 350px;
+  width: 500px;
   padding: 45px 28px 30px;
-  margin-right: 400px; /* Espacement raisonnable entre les blocs */
+  margin-right: 500px; /* Espacement équilibré entre les blocs */
   position: relative;
   z-index: 10;
   opacity: 0;
@@ -623,7 +623,7 @@ body.in-hero {
   top: -15px;
   left: -10px;
   font-family: 'Mistral', cursive;
-  font-size: 48px;
+  font-size: 72px;
   text-transform: uppercase;
   color: #EC1D31;
   font-style: normal;
@@ -639,7 +639,7 @@ body.in-hero {
 .title-detached {
   position: absolute;
   font-family: 'Mistral', cursive;
-  font-size: 48px;
+  font-size: 72px;
   font-weight: 700;
   font-style: normal;
   text-transform: uppercase;
@@ -913,8 +913,11 @@ body.in-hero {
 }
 
 .content-block p {
+  mix-blend-mode: normal;
+  opacity: 0.9;
   color: #000000;
-  font-size: 18px;
+  font-size: 28px;
+  letter-spacing: 1.5px;
   line-height: 1.6;
   margin: 0;
   font-family: 'Mistral', cursive;
@@ -1080,6 +1083,224 @@ body.in-hero {
 .placeholder-section h2 {
   font-size: 48px;
   margin-bottom: 20px;
+}
+
+/* ============================================
+   TRANSITION ENTRE CHAPITRES
+   ============================================ */
+.chapter-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 9997;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.chapter-transition-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000000;
+  transform: scaleY(0);
+  transform-origin: center center;
+  will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chapter-transition-content {
+  text-align: center;
+  opacity: 0;
+  transform: translateY(30px);
+  will-change: opacity, transform;
+}
+
+.chapter-transition-title {
+  font-family: 'mongoose', sans-serif;
+  font-size: clamp(50px, 12vw, 150px);
+  color: #EC1D31;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 8px;
+  text-shadow: 0 0 60px rgba(236, 29, 49, 0.6),
+               0 0 120px rgba(236, 29, 49, 0.3);
+  animation: none;
+}
+
+.chapter-transition-title.pulse {
+  animation: chapterTitlePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes chapterTitlePulse {
+  0%, 100% {
+    text-shadow: 0 0 60px rgba(236, 29, 49, 0.6),
+                 0 0 120px rgba(236, 29, 49, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 100px rgba(236, 29, 49, 0.9),
+                 0 0 180px rgba(236, 29, 49, 0.5);
+  }
+}
+
+.chapter-transition-subtitle {
+  font-family: 'mongoose', sans-serif;
+  font-size: clamp(18px, 3vw, 36px);
+  color: #ffffff;
+  margin: 25px 0 0 0;
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  opacity: 0.7;
+}
+
+/* ============================================
+   BARRE DE PROGRESSION
+   ============================================ */
+.progress-bar-container {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9990;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  pointer-events: none;
+}
+
+.progress-bar-container.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.progress-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-chapter-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-chapter-number {
+  font-family: 'mongoose', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: #EC1D31;
+  text-shadow: 0 0 20px rgba(236, 29, 49, 0.5);
+  letter-spacing: 2px;
+}
+
+.progress-chapter-name {
+  font-family: 'mongoose', sans-serif;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
+
+.progress-track {
+  position: relative;
+  width: 300px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: visible;
+}
+
+.progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #EC1D31 0%, #ff4757 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 15px rgba(236, 29, 49, 0.6);
+  transition: width 0.1s ease-out;
+}
+
+.progress-chapters-markers {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: translateY(-50%);
+}
+
+.progress-marker {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+}
+
+/* Position des marqueurs - calibrés avec la progression (5 chapitres = 20% chacun) */
+.progress-marker[data-chapter="1"] { left: 0%; }
+.progress-marker[data-chapter="2"] { left: 20%; }
+.progress-marker[data-chapter="3"] { left: 40%; }
+.progress-marker[data-chapter="4"] { left: 60%; }
+.progress-marker[data-chapter="5"] { left: 80%; }
+
+.progress-marker::before {
+  content: attr(data-chapter);
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'mongoose', sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.progress-marker.active {
+  background: #EC1D31;
+  box-shadow: 0 0 10px rgba(236, 29, 49, 0.8);
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+.progress-marker.active::before {
+  opacity: 1;
+  color: #EC1D31;
+}
+
+.progress-marker.passed {
+  background: rgba(236, 29, 49, 0.6);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .progress-bar-container {
+    top: 20px;
+  }
+  
+  .progress-track {
+    width: 200px;
+  }
+  
+  .progress-chapter-number {
+    font-size: 22px;
+  }
+  
+  .progress-chapter-name {
+    font-size: 12px;
+  }
 }
 
 /* ============================================

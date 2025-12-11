@@ -143,7 +143,7 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 // LENIS - Smooth Scroll
 // ============================================
 const lenis = new Lenis({
-  duration: 1.8, // Augmenté de 1.2 à 1.8 pour un scroll plus lent
+  duration: 1.2, // Retour à la valeur normale pour un momentum raisonnable
   easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
   orientation: 'vertical',
   smoothWheel: true,
@@ -158,6 +158,13 @@ let curtainTransitionState = {
   justNavigated: false // Flag pour éviter l'animation juste après un clic
 };
 
+// Variable globale pour les transitions entre chapitres
+let chapterTransitionState = {
+  isAnimating: false,
+  currentChapterIndex: 0,
+  getChapterBounds: null // Sera définie dans initChapterTransitions
+};
+
 // Synchroniser Lenis avec ScrollTrigger
 lenis.on('scroll', (e) => {
   ScrollTrigger.update();
@@ -170,6 +177,27 @@ lenis.on('scroll', (e) => {
     const chapter1Start = curtainTransitionState.getChapter1Start();
     if (e.scroll < chapter1Start) {
       lenis.scrollTo(chapter1Start, { immediate: true });
+    }
+  }
+  
+  // Bloquer le scroll aux fins/débuts de chapitres (transition entre chapitres)
+  if (!chapterTransitionState.isAnimating && 
+      chapterTransitionState.getChapterBounds &&
+      curtainTransitionState.currentSection !== 'hero') {
+    const bounds = chapterTransitionState.getChapterBounds();
+    if (bounds) {
+      // Bloquer à la fin du chapitre (sauf dernier chapitre)
+      if (bounds.atEnd && bounds.maxScroll !== null) {
+        if (e.scroll > bounds.maxScroll) {
+          lenis.scrollTo(bounds.maxScroll, { immediate: true });
+        }
+      }
+      // Bloquer au début du chapitre (sauf premier chapitre, géré par curtain)
+      if (bounds.atStart && bounds.minScroll !== null && bounds.index > 0) {
+        if (e.scroll < bounds.minScroll) {
+          lenis.scrollTo(bounds.minScroll, { immediate: true });
+        }
+      }
     }
   }
 });
@@ -438,10 +466,10 @@ function initHorizontalSections() {
     ScrollTrigger.create({
       trigger: section,
       start: 'top top',
-      end: () => `+=${getScrollAmount()}`,
+      end: () => `+=${getScrollAmount() * 3}`, // Multiplié par 3 : il faudra scroller 3x plus pour traverser le chapitre
       pin: true,
       animation: tween,
-      scrub: 2, // Augmenté de 1 à 2 pour ralentir le mouvement horizontal
+      scrub: 1, // Remis à 1 pour une réactivité normale
       invalidateOnRefresh: true,
       anticipatePin: 1,
     });
@@ -468,7 +496,7 @@ function initHorizontalSections() {
             containerAnimation: tween,
             start: 'left 80%',
             end: 'left 50%',
-            scrub: 1, // Augmenté de 0.5 à 1 pour une apparition plus fluide
+            scrub: 0.5, // Remis à la valeur normale pour une apparition fluide
           }
         }
       );
@@ -677,8 +705,8 @@ function initParallaxLayers() {
     ScrollTrigger.create({
       trigger: section,
       start: 'top top',
-      end: () => `+=${getScrollAmount()}`,
-      scrub: 1, // Augmenté de 0.5 à 1 pour synchroniser avec le scroll plus lent
+      end: () => `+=${getScrollAmount() * 3}`, // Synchronisé avec le ScrollTrigger principal
+      scrub: 1, // Remis à 1 pour une réactivité normale
       onUpdate: (self) => {
         // self.progress va de 0 à 1
         const progress = self.progress;
@@ -1307,6 +1335,289 @@ function initCurtainTransition() {
 // ============================================
 // PERSONNAGES CLIQUABLES (CARROUSEL)
 // ============================================
+
+// Données des chapitres pour les transitions
+const chapterData = {
+  'chapitre1': {
+    title: 'Chapitre I',
+    subtitle: 'Boyz-N-The-Hood'
+  },
+  'chapitre2': {
+    title: 'Chapitre II',
+    subtitle: 'Straight Outta Compton'
+  },
+  'chapitre3': {
+    title: 'Chapitre III',
+    subtitle: 'Fuck Tha Police'
+  },
+  'chapitre4': {
+    title: 'Chapitre IV',
+    subtitle: 'No Vaseline'
+  },
+  'chapitre5': {
+    title: 'Chapitre V',
+    subtitle: 'I Need a Doctor'
+  }
+};
+
+// ============================================
+// TRANSITION ENTRE CHAPITRES
+// ============================================
+function initChapterTransitions() {
+  const chapters = ['chapitre1', 'chapitre2', 'chapitre3', 'chapitre4', 'chapitre5'];
+  const transitionOverlay = document.querySelector('.chapter-transition-overlay');
+  const transitionPanel = document.querySelector('.chapter-transition-panel');
+  const transitionContent = document.querySelector('.chapter-transition-content');
+  const transitionTitle = document.querySelector('.chapter-transition-title');
+  const transitionSubtitle = document.querySelector('.chapter-transition-subtitle');
+  
+  if (!transitionOverlay || !transitionPanel) return;
+  
+  // S'assurer que le panneau est caché au départ
+  gsap.set(transitionPanel, { scaleY: 0 });
+  gsap.set(transitionContent, { opacity: 0, y: 30 });
+  
+  // Zone de blocage (en pourcentage de progression)
+  const END_ZONE = 0.97;
+  const START_ZONE = 0.03;
+  
+  // Récupérer les infos de scroll de chaque chapitre
+  function getChapterInfo(chapterId) {
+    const section = document.getElementById(chapterId);
+    if (!section) return null;
+    
+    const triggers = ScrollTrigger.getAll();
+    const trigger = triggers.find(t => t.trigger === section);
+    
+    if (!trigger) return null;
+    
+    return {
+      section,
+      trigger,
+      start: trigger.start,
+      end: trigger.end
+    };
+  }
+  
+  // Déterminer le chapitre visible et sa progression
+  function getCurrentChapterState() {
+    const scrollY = window.scrollY;
+    
+    for (let i = 0; i < chapters.length; i++) {
+      const info = getChapterInfo(chapters[i]);
+      if (!info) continue;
+      
+      // Si on est dans la plage de ce chapitre
+      if (scrollY >= info.start - 50 && scrollY <= info.end + 50) {
+        const progress = (scrollY - info.start) / (info.end - info.start);
+        return {
+          index: i,
+          id: chapters[i],
+          progress: Math.max(0, Math.min(1, progress)),
+          info
+        };
+      }
+    }
+    return null;
+  }
+  
+  // Exposer la fonction pour obtenir les limites de scroll du chapitre courant
+  chapterTransitionState.getChapterBounds = function() {
+    const state = getCurrentChapterState();
+    if (!state) return null;
+    
+    const { index, info, progress } = state;
+    const totalRange = info.end - info.start;
+    
+    return {
+      index,
+      progress,
+      atEnd: progress >= END_ZONE,
+      atStart: progress <= START_ZONE,
+      maxScroll: index < chapters.length - 1 ? info.start + totalRange * END_ZONE : null,
+      minScroll: index > 0 ? info.start + totalRange * START_ZONE : null
+    };
+  };
+  
+  // Animation de transition vers un chapitre
+  function transitionToChapter(toChapterId, direction) {
+    if (chapterTransitionState.isAnimating) return;
+    chapterTransitionState.isAnimating = true;
+    
+    // Cacher la barre de progression pendant la transition
+    const progressContainer = document.querySelector('.progress-bar-container');
+    if (progressContainer) {
+      progressContainer.classList.remove('visible');
+    }
+    
+    const toChapter = chapterData[toChapterId];
+    if (!toChapter) {
+      chapterTransitionState.isAnimating = false;
+      return;
+    }
+    
+    // Mettre à jour le texte de la transition
+    transitionTitle.textContent = toChapter.title;
+    transitionSubtitle.textContent = toChapter.subtitle;
+    
+    // Stopper le scroll
+    lenis.stop();
+    
+    // Trouver la position cible
+    const targetInfo = getChapterInfo(toChapterId);
+    if (!targetInfo) {
+      chapterTransitionState.isAnimating = false;
+      lenis.start();
+      return;
+    }
+    
+    let targetPosition;
+    if (direction === 'next') {
+      // Aller au début du chapitre suivant (un peu après le start pour être dans la zone safe)
+      targetPosition = targetInfo.start + (targetInfo.end - targetInfo.start) * 0.05;
+    } else {
+      // Aller vers la fin du chapitre précédent (85% pour avoir de la marge)
+      targetPosition = targetInfo.start + (targetInfo.end - targetInfo.start) * 0.85;
+    }
+    
+    // Mettre à jour l'index du chapitre courant
+    chapterTransitionState.currentChapterIndex = chapters.indexOf(toChapterId);
+    
+    // Timeline d'animation
+    const tl = gsap.timeline({
+      onComplete: () => {
+        // Reset
+        gsap.set(transitionPanel, { scaleY: 0 });
+        gsap.set(transitionContent, { opacity: 0, y: 30 });
+        transitionTitle.classList.remove('pulse');
+        
+        setTimeout(() => {
+          chapterTransitionState.isAnimating = false;
+          lenis.start();
+        }, 100);
+      }
+    });
+    
+    // Phase 1: Le panneau apparaît (scale depuis le centre)
+    tl.to(transitionPanel, {
+      scaleY: 1,
+      duration: 0.4,
+      ease: 'power2.inOut'
+    }, 0)
+    
+    // Phase 2: Le contenu apparaît
+    .to(transitionContent, {
+      opacity: 1,
+      y: 0,
+      duration: 0.3,
+      ease: 'power2.out',
+      onStart: () => {
+        transitionTitle.classList.add('pulse');
+      }
+    }, 0.25)
+    
+    // Phase 3: Téléportation (panneau fermé)
+    .call(() => {
+      window.scrollTo(0, targetPosition);
+      ScrollTrigger.refresh();
+    }, null, 0.5)
+    
+    // Phase 4: Pause pour lire le titre
+    .to({}, { duration: 0.5 })
+    
+    // Phase 5: Le contenu disparaît
+    .to(transitionContent, {
+      opacity: 0,
+      y: -20,
+      duration: 0.25,
+      ease: 'power2.in'
+    })
+    
+    // Phase 6: Le panneau disparaît
+    .to(transitionPanel, {
+      scaleY: 0,
+      duration: 0.4,
+      ease: 'power2.inOut'
+    }, '-=0.1');
+  }
+  
+  // Gérer le scroll wheel
+  window.addEventListener('wheel', (e) => {
+    if (!siteUnlocked || chapterTransitionState.isAnimating) {
+      e.preventDefault();
+      return;
+    }
+    
+    // Ne pas interférer avec la transition hero ↔ chapitre1
+    if (curtainTransitionState.currentSection === 'hero') return;
+    if (curtainTransitionState.isAnimating) return;
+    
+    const state = getCurrentChapterState();
+    if (!state) return;
+    
+    const { index, id, progress } = state;
+    
+    // === FIN DU CHAPITRE : scroll vers le bas ===
+    if (e.deltaY > 0 && progress >= END_ZONE) {
+      // Vérifier qu'il y a un chapitre suivant (pas après chapitre 5)
+      if (index < chapters.length - 1) {
+        e.preventDefault();
+        transitionToChapter(chapters[index + 1], 'next');
+        return;
+      }
+    }
+    
+    // === DÉBUT DU CHAPITRE : scroll vers le haut ===
+    if (e.deltaY < 0 && progress <= START_ZONE) {
+      // Vérifier qu'il y a un chapitre précédent (pas avant chapitre 1, géré par curtain)
+      if (index > 0) {
+        e.preventDefault();
+        transitionToChapter(chapters[index - 1], 'prev');
+        return;
+      }
+    }
+  }, { passive: false });
+  
+  // Support tactile
+  let touchStartY = 0;
+  let touchHandled = false;
+  
+  window.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+    touchHandled = false;
+  }, { passive: true });
+  
+  window.addEventListener('touchmove', (e) => {
+    if (!siteUnlocked || chapterTransitionState.isAnimating || touchHandled) return;
+    if (curtainTransitionState.currentSection === 'hero') return;
+    if (curtainTransitionState.isAnimating) return;
+    
+    const touchY = e.touches[0].clientY;
+    const deltaY = touchStartY - touchY; // positif = swipe vers le haut (scroll down)
+    
+    const state = getCurrentChapterState();
+    if (!state) return;
+    
+    const { index, progress } = state;
+    
+    // Swipe up (scroll down) à la fin du chapitre
+    if (deltaY > 50 && progress >= END_ZONE && index < chapters.length - 1) {
+      touchHandled = true;
+      e.preventDefault();
+      transitionToChapter(chapters[index + 1], 'next');
+      return;
+    }
+    
+    // Swipe down (scroll up) au début du chapitre
+    if (deltaY < -50 && progress <= START_ZONE && index > 0) {
+      touchHandled = true;
+      e.preventDefault();
+      transitionToChapter(chapters[index - 1], 'prev');
+      return;
+    }
+  }, { passive: false });
+}
+
 const characterData = {
   'dr-dre': {
     name: 'Dr. Dre',
@@ -1543,6 +1854,8 @@ function init() {
   ChapterMusicManager.init();
   initHorizontalSections();
   initCurtainTransition(); // Après initHorizontalSections pour avoir les ScrollTriggers
+  initChapterTransitions(); // Transitions entre chapitres
+  initProgressBar(); // Barre de progression
   initNavigation();
   initParallaxLayers();
   initNavbar();
@@ -1552,6 +1865,105 @@ function init() {
   initHoverAudio();
   initSmoothCarousels();
   initCharacterCards(); // Personnages cliquables
+}
+
+// ============================================
+// BARRE DE PROGRESSION
+// ============================================
+function initProgressBar() {
+  const progressContainer = document.querySelector('.progress-bar-container');
+  const progressFill = document.querySelector('.progress-fill');
+  const progressChapterNumber = document.querySelector('.progress-chapter-number');
+  const progressChapterName = document.querySelector('.progress-chapter-name');
+  const progressMarkers = document.querySelectorAll('.progress-marker');
+  
+  if (!progressContainer || !progressFill) return;
+  
+  const chapters = ['chapitre1', 'chapitre2', 'chapitre3', 'chapitre4', 'chapitre5'];
+  const chapterRomanNumerals = ['I', 'II', 'III', 'IV', 'V'];
+  
+  // Récupérer les infos d'un chapitre
+  function getChapterInfo(chapterId) {
+    const section = document.getElementById(chapterId);
+    if (!section) return null;
+    
+    const triggers = ScrollTrigger.getAll();
+    const trigger = triggers.find(t => t.trigger === section);
+    
+    if (!trigger) return null;
+    
+    return {
+      start: trigger.start,
+      end: trigger.end
+    };
+  }
+  
+  // Mettre à jour la barre de progression
+  function updateProgressBar() {
+    const scrollY = window.scrollY;
+    
+    // Trouver le chapitre actuel
+    let currentChapterIndex = -1;
+    let currentProgress = 0;
+    
+    for (let i = 0; i < chapters.length; i++) {
+      const info = getChapterInfo(chapters[i]);
+      if (!info) continue;
+      
+      if (scrollY >= info.start - 50 && scrollY <= info.end + 50) {
+        currentChapterIndex = i;
+        currentProgress = (scrollY - info.start) / (info.end - info.start);
+        currentProgress = Math.max(0, Math.min(1, currentProgress));
+        break;
+      }
+    }
+    
+    // Si on n'est pas dans un chapitre, cacher la barre
+    if (currentChapterIndex === -1 || curtainTransitionState.currentSection === 'hero') {
+      progressContainer.classList.remove('visible');
+      return;
+    }
+    
+    // Afficher la barre
+    progressContainer.classList.add('visible');
+    
+    // Mettre à jour le texte du chapitre
+    const chapterInfo = chapterData[chapters[currentChapterIndex]];
+    if (chapterInfo) {
+      progressChapterNumber.textContent = chapterRomanNumerals[currentChapterIndex];
+      progressChapterName.textContent = chapterInfo.subtitle;
+    }
+    
+    // Mettre à jour la barre de remplissage
+    // 5 chapitres = 20% chacun, progression globale de 0% à 100%
+    const chapterWidth = 100 / chapters.length; // 20%
+    const globalProgress = (currentChapterIndex * chapterWidth) + (currentProgress * chapterWidth);
+    progressFill.style.width = `${globalProgress}%`;
+    
+    // Mettre à jour les marqueurs
+    progressMarkers.forEach((marker, index) => {
+      marker.classList.remove('active', 'passed');
+      
+      if (index === currentChapterIndex) {
+        marker.classList.add('active');
+      } else if (index < currentChapterIndex) {
+        marker.classList.add('passed');
+      }
+    });
+  }
+  
+  // Écouter le scroll
+  lenis.on('scroll', updateProgressBar);
+  
+  // Écouter aussi les transitions
+  const observer = new MutationObserver(() => {
+    if (chapterTransitionState.isAnimating || curtainTransitionState.isAnimating) {
+      progressContainer.classList.remove('visible');
+    }
+  });
+  
+  // Mise à jour initiale après un délai pour que les ScrollTriggers soient prêts
+  setTimeout(updateProgressBar, 500);
 }
 
 // ============================================
