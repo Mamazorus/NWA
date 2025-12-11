@@ -1194,7 +1194,7 @@ body.in-hero {
 
 .progress-chapter-number {
   font-family: 'mongoose', sans-serif;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: #EC1D31;
   text-shadow: 0 0 20px rgba(236, 29, 49, 0.5);
@@ -1203,7 +1203,7 @@ body.in-hero {
 
 .progress-chapter-name {
   font-family: 'mongoose', sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
   letter-spacing: 3px;
@@ -1294,7 +1294,7 @@ body.in-hero {
 }
 
 .progress-marker.passed {
-  background: rgba(236, 29, 49, 0.6);
+  background: #EC1D31;
 }
 
 /* Responsive */
