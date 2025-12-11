@@ -1176,6 +1176,7 @@ body.in-hero {
 .progress-bar-container.visible {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .progress-bar-wrapper {
@@ -1247,6 +1248,13 @@ body.in-hero {
   top: 50%;
   transform: translate(-50%, -50%);
   transition: all 0.3s ease;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.progress-marker:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: translate(-50%, -50%) scale(1.5);
 }
 
 /* Position des marqueurs - calibrés avec la progression (5 chapitres = 20% chacun) */
@@ -1273,6 +1281,10 @@ body.in-hero {
   background: #EC1D31;
   box-shadow: 0 0 10px rgba(236, 29, 49, 0.8);
   transform: translate(-50%, -50%) scale(1.3);
+}
+
+.progress-marker.active:hover {
+  transform: translate(-50%, -50%) scale(1.5);
 }
 
 .progress-marker.active::before {

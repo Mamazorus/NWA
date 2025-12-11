@@ -519,6 +519,42 @@ function initHorizontalSections() {
         });
       }
     });
+    
+    // Déclencher le dernier parallax set automatiquement à la fin du chapitre
+    // Vérifier si le dernier parallax set n'est pas déjà déclenché par un content-block
+    if (parallaxSets.length > 0) {
+      const lastParallaxSetNumber = parallaxSets.length;
+      
+      // Trouver le plus grand data-trigger-set dans les content-blocks
+      let maxTriggerSet = 0;
+      blocks.forEach(block => {
+        const triggerSet = parseInt(block.getAttribute('data-trigger-set')) || 0;
+        if (triggerSet > maxTriggerSet) {
+          maxTriggerSet = triggerSet;
+        }
+      });
+      
+      // S'il y a des parallax sets non déclenchés, ajouter un trigger pour le dernier
+      if (lastParallaxSetNumber > maxTriggerSet) {
+        const lastBlock = blocks[blocks.length - 1];
+        
+        if (lastBlock) {
+          ScrollTrigger.create({
+            trigger: lastBlock,
+            containerAnimation: tween,
+            start: 'center 40%', // Quand le dernier bloc arrive au centre-gauche
+            end: 'right 20%',
+            onEnter: () => switchParallaxSet(section, lastParallaxSetNumber.toString()),
+            onEnterBack: () => {
+              // Revenir au set du dernier content-block
+              if (maxTriggerSet >= 1) {
+                switchParallaxSet(section, maxTriggerSet.toString());
+              }
+            },
+          });
+        }
+      }
+    }
   });
   
   function switchParallaxSet(section, setNumber) {
@@ -1882,6 +1918,12 @@ function initProgressBar() {
   const chapters = ['chapitre1', 'chapitre2', 'chapitre3', 'chapitre4', 'chapitre5'];
   const chapterRomanNumerals = ['I', 'II', 'III', 'IV', 'V'];
   
+  // Éléments de transition (les mêmes que la navbar)
+  const navTransitionPanel = document.querySelector('.nav-transition-panel');
+  const navTransitionContent = document.querySelector('.nav-transition-content');
+  const navTransitionTitle = document.querySelector('.nav-transition-title');
+  const navTransitionSubtitle = document.querySelector('.nav-transition-subtitle');
+  
   // Récupérer les infos d'un chapitre
   function getChapterInfo(chapterId) {
     const section = document.getElementById(chapterId);
@@ -1897,6 +1939,108 @@ function initProgressBar() {
       end: trigger.end
     };
   }
+  
+  // Fonction pour naviguer vers un chapitre avec transition (comme la navbar)
+  function navigateToChapter(chapterIndex) {
+    if (!navTransitionPanel || !navTransitionContent) return;
+    
+    const chapterId = chapters[chapterIndex];
+    const targetSection = document.getElementById(chapterId);
+    const chapterInfo = chapterData[chapterId];
+    
+    if (!targetSection || !chapterInfo) return;
+    
+    // Cacher la barre de progression
+    progressContainer.classList.remove('visible');
+    
+    // Mettre à jour le texte de transition
+    if (navTransitionTitle) navTransitionTitle.textContent = chapterInfo.title;
+    if (navTransitionSubtitle) navTransitionSubtitle.textContent = chapterInfo.subtitle;
+    
+    // Stopper le scroll
+    lenis.stop();
+    
+    // Trouver la position cible
+    const triggers = ScrollTrigger.getAll();
+    const sectionTrigger = triggers.find(t => t.trigger === targetSection);
+    const targetPosition = sectionTrigger ? sectionTrigger.start : targetSection.offsetTop;
+    
+    // Mettre à jour l'état si on vient de la hero
+    if (curtainTransitionState.currentSection === 'hero') {
+      if (curtainTransitionState.updateSection) {
+        curtainTransitionState.updateSection('chapitre1');
+      } else {
+        curtainTransitionState.currentSection = 'chapitre1';
+        document.body.classList.remove('in-hero');
+      }
+      curtainTransitionState.justNavigated = true;
+      setTimeout(() => {
+        curtainTransitionState.justNavigated = false;
+      }, 3000);
+    }
+    
+    // Timeline d'animation (identique à la navbar)
+    const tl = gsap.timeline({
+      onComplete: () => {
+        setTimeout(() => {
+          lenis.start();
+        }, 100);
+      }
+    });
+    
+    // Phase 1: Slide in depuis la gauche
+    tl.to(navTransitionPanel, { 
+      x: '0%', 
+      duration: 0.6, 
+      ease: 'power2.inOut' 
+    }, 0)
+    
+    // Phase 2: Afficher le contenu
+    .to(navTransitionContent, { 
+      opacity: 1, 
+      scale: 1, 
+      duration: 0.3, 
+      ease: 'power2.out' 
+    }, 0.3)
+    
+    // Phase 3: Téléportation
+    .call(() => {
+      window.scrollTo(0, targetPosition);
+      ScrollTrigger.refresh();
+    }, null, 0.7)
+    
+    // Phase 4: Petite pause
+    .to({}, { duration: 0.3 })
+    
+    // Phase 5: Masquer le contenu
+    .to(navTransitionContent, { 
+      opacity: 0, 
+      scale: 1.1, 
+      duration: 0.2, 
+      ease: 'power2.in' 
+    }, 1.0)
+    
+    // Phase 6: Slide out vers la droite
+    .to(navTransitionPanel, { 
+      x: '100%', 
+      duration: 0.6, 
+      ease: 'power2.inOut' 
+    }, 1.1)
+    
+    // Phase 7: Reset
+    .call(() => {
+      gsap.set(navTransitionPanel, { x: '-100%' });
+      gsap.set(navTransitionContent, { opacity: 0, scale: 0.8 });
+    }, null, 1.8);
+  }
+  
+  // Ajouter les event listeners sur les marqueurs
+  progressMarkers.forEach((marker, index) => {
+    marker.addEventListener('click', (e) => {
+      e.stopPropagation();
+      navigateToChapter(index);
+    });
+  });
   
   // Mettre à jour la barre de progression
   function updateProgressBar() {
