@@ -143,7 +143,7 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 // LENIS - Smooth Scroll
 // ============================================
 const lenis = new Lenis({
-  duration: 1.2,
+  duration: 1.8, // Augmenté de 1.2 à 1.8 pour un scroll plus lent
   easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
   orientation: 'vertical',
   smoothWheel: true,
@@ -441,7 +441,7 @@ function initHorizontalSections() {
       end: () => `+=${getScrollAmount()}`,
       pin: true,
       animation: tween,
-      scrub: 1,
+      scrub: 2, // Augmenté de 1 à 2 pour ralentir le mouvement horizontal
       invalidateOnRefresh: true,
       anticipatePin: 1,
     });
@@ -468,7 +468,7 @@ function initHorizontalSections() {
             containerAnimation: tween,
             start: 'left 80%',
             end: 'left 50%',
-            scrub: 0.5,
+            scrub: 1, // Augmenté de 0.5 à 1 pour une apparition plus fluide
           }
         }
       );
@@ -678,7 +678,7 @@ function initParallaxLayers() {
       trigger: section,
       start: 'top top',
       end: () => `+=${getScrollAmount()}`,
-      scrub: 0.5,
+      scrub: 1, // Augmenté de 0.5 à 1 pour synchroniser avec le scroll plus lent
       onUpdate: (self) => {
         // self.progress va de 0 à 1
         const progress = self.progress;
@@ -1305,6 +1305,237 @@ function initCurtainTransition() {
 }
 
 // ============================================
+// PERSONNAGES CLIQUABLES (CARROUSEL)
+// ============================================
+const characterData = {
+  'dr-dre': {
+    name: 'Dr. Dre',
+    role: 'Producteur & Rappeur',
+    bio: "Andre Romelle Young, dit Dr. Dre, est le cerveau musical de N.W.A. Producteur visionnaire, il crée le son du G-funk qui définira le rap West Coast. Après N.W.A, il fonde Death Row Records puis Aftermath Entertainment, lançant les carrières de Snoop Dogg, Eminem et 50 Cent."
+  },
+  'eazy-e': {
+    name: 'Eazy-E',
+    role: 'Fondateur & Rappeur',
+    bio: "Eric Lynn Wright, dit Eazy-E, est le parrain du gangsta rap. Ancien dealer devenu entrepreneur, il fonde Ruthless Records et finance le premier single de N.W.A. Sa voix nasillarde et son flow unique deviennent la signature du groupe. Il décède en 1995 du SIDA à seulement 30 ans."
+  },
+  'ice-cube': {
+    name: 'Ice Cube',
+    role: 'Rappeur & Parolier',
+    bio: "O'Shea Jackson, dit Ice Cube, est la plume de N.W.A. Auteur de la majorité des textes de 'Straight Outta Compton', il quitte le groupe en 1989 pour une carrière solo explosive. Il devient également acteur et réalisateur à succès à Hollywood."
+  },
+  'mc-ren': {
+    name: 'MC Ren',
+    role: 'Rappeur',
+    bio: "Lorenzo Jerald Patterson, dit MC Ren, rejoint N.W.A en 1988. Considéré comme le 'Ruthless Villain', son flow agressif et ses textes crus incarnent l'essence du gangsta rap. Après la séparation, il poursuit une carrière solo underground respectée."
+  },
+  'dj-yella': {
+    name: 'DJ Yella',
+    role: 'DJ & Producteur',
+    bio: "Antoine Carraby, dit DJ Yella, est le DJ officiel de N.W.A. Aux côtés de Dr. Dre, il façonne le son révolutionnaire du groupe. Expert du scratch et du sampling, il est le pilier discret mais essentiel de la machine N.W.A."
+  },
+  'arabian-prince': {
+    name: 'Arabian Prince',
+    role: 'Producteur & Rappeur',
+    bio: "Mik Lezan, dit Arabian Prince, est un membre fondateur souvent oublié de N.W.A. Pionnier de l'electro-hop, il co-produit les premiers morceaux du groupe avant de partir en 1988. Son influence sur le son early N.W.A reste indéniable."
+  }
+};
+
+// Système de détection de hitbox précise
+const CharacterHitbox = {
+  canvasCache: new Map(),
+  
+  // Initialiser le cache pour toutes les images
+  init() {
+    const images = document.querySelectorAll('.person-card img');
+    images.forEach(img => {
+      if (img.complete) {
+        this.cacheImage(img);
+      } else {
+        img.addEventListener('load', () => this.cacheImage(img));
+      }
+    });
+  },
+  
+  cacheImage(img) {
+    if (this.canvasCache.has(img.src)) return;
+    
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+      
+      // Test si on peut lire les pixels (CORS)
+      ctx.getImageData(0, 0, 1, 1);
+      
+      this.canvasCache.set(img.src, { canvas, ctx });
+    } catch (e) {
+      // CORS error - on marque comme non-disponible
+      this.canvasCache.set(img.src, null);
+    }
+  },
+  
+  // Vérifier si un point est sur un pixel visible de l'image
+  isPixelVisible(img, clientX, clientY) {
+    const cached = this.canvasCache.get(img.src);
+    
+    // Si pas de cache ou erreur CORS, fallback sur bounding box simple
+    if (!cached) return this.isInBoundingBox(img, clientX, clientY);
+    
+    const { canvas, ctx } = cached;
+    const rect = img.getBoundingClientRect();
+    
+    // Coordonnées relatives à l'image affichée
+    const relX = (clientX - rect.left) / rect.width;
+    const relY = (clientY - rect.top) / rect.height;
+    
+    // Hors de l'image
+    if (relX < 0 || relX > 1 || relY < 0 || relY > 1) return false;
+    
+    // Convertir en coordonnées canvas
+    const canvasX = Math.floor(relX * canvas.width);
+    const canvasY = Math.floor(relY * canvas.height);
+    
+    try {
+      const pixel = ctx.getImageData(canvasX, canvasY, 1, 1).data;
+      return pixel[3] > 50; // Alpha > 50 = pixel visible
+    } catch (e) {
+      return this.isInBoundingBox(img, clientX, clientY);
+    }
+  },
+  
+  isInBoundingBox(img, clientX, clientY) {
+    const rect = img.getBoundingClientRect();
+    return clientX >= rect.left && clientX <= rect.right && 
+           clientY >= rect.top && clientY <= rect.bottom;
+  },
+  
+  // Trouver le personnage sous le curseur
+  findCharacterAt(clientX, clientY) {
+    const allCards = document.querySelectorAll('.person-card[data-character]');
+    let foundCard = null;
+    let highestZIndex = -1;
+    
+    allCards.forEach(card => {
+      const img = card.querySelector('img');
+      if (!img) return;
+      
+      // Vérifier si le point est sur un pixel visible
+      if (this.isPixelVisible(img, clientX, clientY)) {
+        // Calculer le z-index effectif (front-row > back-row)
+        const row = card.closest('.carousel-row');
+        const isFrontRow = row && row.classList.contains('front-row');
+        const baseZ = isFrontRow ? 1000 : 0;
+        const cardZ = parseInt(window.getComputedStyle(card).zIndex) || 0;
+        const effectiveZ = baseZ + cardZ;
+        
+        // Si ce personnage est devant, vérifier s'il bloque
+        if (effectiveZ > highestZIndex) {
+          highestZIndex = effectiveZ;
+          foundCard = card;
+        }
+      }
+    });
+    
+    return foundCard;
+  }
+};
+
+function initCharacterCards() {
+  const infoPanel = document.querySelector('.character-info');
+  const overlay = document.querySelector('.character-overlay');
+  const closeBtn = document.querySelector('.character-info-close');
+  const heroSection = document.querySelector('.hero-section');
+  const carouselRows = document.querySelectorAll('.carousel-row');
+  
+  if (!infoPanel || !overlay || !heroSection) return;
+  
+  // Initialiser le système de hitbox
+  CharacterHitbox.init();
+  
+  const nameEl = infoPanel.querySelector('.character-name');
+  const roleEl = infoPanel.querySelector('.character-role');
+  const bioEl = infoPanel.querySelector('.character-bio');
+  
+  let currentHoveredCard = null;
+  
+  function openCharacter(characterId) {
+    const data = characterData[characterId];
+    if (!data) return;
+    
+    nameEl.textContent = data.name;
+    roleEl.textContent = data.role;
+    bioEl.textContent = data.bio;
+    
+    infoPanel.classList.add('is-visible');
+    overlay.classList.add('is-visible');
+  }
+  
+  function closeCharacter() {
+    infoPanel.classList.remove('is-visible');
+    overlay.classList.remove('is-visible');
+  }
+  
+  function updateHover(card) {
+    if (card === currentHoveredCard) return;
+    
+    // Retirer l'ancien hover
+    if (currentHoveredCard) {
+      currentHoveredCard.classList.remove('is-hovered');
+    }
+    
+    // Appliquer le nouveau hover
+    if (card) {
+      card.classList.add('is-hovered');
+      heroSection.style.cursor = 'pointer';
+    } else {
+      heroSection.style.cursor = '';
+    }
+    
+    currentHoveredCard = card;
+  }
+  
+  // Écouter les mouvements sur la hero section
+  heroSection.addEventListener('mousemove', (e) => {
+    const card = CharacterHitbox.findCharacterAt(e.clientX, e.clientY);
+    updateHover(card);
+    
+    // Pauser le carrousel si on hover un personnage
+    carouselRows.forEach(row => {
+      if (card && card.closest('.carousel-row') === row) {
+        row.classList.add('is-paused');
+      } else {
+        row.classList.remove('is-paused');
+      }
+    });
+  });
+  
+  heroSection.addEventListener('mouseleave', () => {
+    updateHover(null);
+    carouselRows.forEach(row => row.classList.remove('is-paused'));
+  });
+  
+  // Clic
+  heroSection.addEventListener('click', (e) => {
+    // Ignorer si on clique sur l'overlay ou le panel
+    if (e.target.closest('.character-info') || e.target.closest('.character-overlay')) return;
+    
+    const card = CharacterHitbox.findCharacterAt(e.clientX, e.clientY);
+    if (card) {
+      openCharacter(card.dataset.character);
+    }
+  });
+  
+  // Fermeture
+  if (closeBtn) closeBtn.addEventListener('click', closeCharacter);
+  overlay.addEventListener('click', closeCharacter);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeCharacter();
+  });
+}
+    
+// ============================================
 // INITIALISATION
 // ============================================
 function init() {
@@ -1320,10 +1551,53 @@ function init() {
   initNavbarAutoClose();
   initHoverAudio();
   initSmoothCarousels();
+  initCharacterCards(); // Personnages cliquables
+}
+
+// ============================================
+// SORTIR LES TITRES DES BLOCS DE CONTENU
+// ============================================
+function extractTitlesFromBlocks() {
+  const contentTitles = document.querySelectorAll('.content-block-title');
+  
+  contentTitles.forEach((title) => {
+    const block = title.closest('.content-block');
+    if (!block) return;
+    
+    const track = block.closest('.horizontal-track');
+    if (!track) return;
+    
+    // Créer un élément titre détaché
+    const detachedTitle = title.cloneNode(true);
+    detachedTitle.classList.add('title-detached');
+    
+    // Insérer le titre détaché dans le track (après le contenu)
+    track.appendChild(detachedTitle);
+    
+    // Masquer le titre original
+    title.style.display = 'none';
+    
+    // Synchroniser les positions avec GSAP
+    gsap.ticker.add(() => {
+      const blockRect = block.getBoundingClientRect();
+      const trackRect = track.getBoundingClientRect();
+      
+      // Position relative au track - dépasser du bloc vers haut et gauche
+      const relativeX = blockRect.left - trackRect.left;
+      const relativeY = blockRect.top - trackRect.top;
+      
+      detachedTitle.style.left = (relativeX - 30) + 'px';
+      detachedTitle.style.top = (relativeY - 20) + 'px';
+    });
+  });
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', () => {
+    extractTitlesFromBlocks();
+    init();
+  });
 } else {
+  extractTitlesFromBlocks();
   init();
 }

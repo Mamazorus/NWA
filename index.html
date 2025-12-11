@@ -36,22 +36,22 @@
       <!-- Rangée arrière-plan -->
       <div class="carousel-row back-row">
         <div class="carousel-track">
-          <div class="person-card">
+          <div class="person-card" data-character="arabian-prince">
             <img src="img/Arabian Prince B&W 1.png" alt="Arabian Prince">
           </div>
-          <div class="person-card">
+          <div class="person-card" data-character="dj-yella">
             <img src="img/DJ Yella B&W 1.png" alt="DJ Yella">
           </div>
-          <div class="person-card">
+          <div class="person-card" data-character="mc-ren">
             <img src="img/Mc Ren B&W 1.png" alt="Mc Ren">
           </div>
-          <div class="person-card">
+          <div class="person-card" data-character="arabian-prince">
             <img src="img/Arabian Prince B&W 1.png" alt="Arabian Prince">
           </div>
-          <div class="person-card">
+          <div class="person-card" data-character="dj-yella">
             <img src="img/DJ Yella B&W 1.png" alt="DJ Yella">
           </div>
-          <div class="person-card">
+          <div class="person-card" data-character="mc-ren">
             <img src="img/Mc Ren B&W 1.png" alt="Mc Ren">
           </div>
         </div>
@@ -60,44 +60,61 @@
       <!-- Rangée premier plan -->
       <div class="carousel-row front-row">
         <div class="carousel-track">
-          <div class="person-card">
+          <div class="person-card" data-character="dr-dre">
             <img src="img/Dr.Dre B&W 1.png" alt="Dr. Dre">
           </div>
-          <div class="person-card">
+          <div class="person-card" data-character="eazy-e">
             <img src="img/Easy-E B&W 1.png" alt="Easy-E">
           </div>
-          <div class="person-card">
+          <div class="person-card" data-character="ice-cube">
             <img src="img/Ice Cube B&W 1.png" alt="Ice Cube">
           </div>
-          <div class="person-card">
+          <div class="person-card" data-character="dr-dre">
             <img src="img/Dr.Dre B&W 1.png" alt="Dr. Dre">
           </div>
-          <div class="person-card">
+          <div class="person-card" data-character="eazy-e">
             <img src="img/Easy-E B&W 1.png" alt="Easy-E">
           </div>
-          <div class="person-card">
+          <div class="person-card" data-character="ice-cube">
             <img src="img/Ice Cube B&W 1.png" alt="Ice Cube">
           </div>
         </div>
+      </div>
+
+      <!-- Overlay pour fermer le panel -->
+      <div class="character-overlay"></div>
+
+      <!-- Panel d'information personnage -->
+      <div class="character-info">
+        <button class="character-info-close" aria-label="Fermer">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+        <h3 class="character-name"></h3>
+        <p class="character-role"></p>
+        <p class="character-bio"></p>
       </div>
     </section>
 
     <div>
       <nav class="navbar open">
         <div class="burger-icon">
-          <svg width="210" height="208" viewBox="0 0 210 208" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="2907" height="2873" viewBox="0 0 2907 2873" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
-              d="M8.99956 133.336C12.8862 140.924 16.7657 146.866 20.6523 152.348C24.5388 157.914 28.4183 162.634 32.3049 166.978V143.719C32.3049 141.832 30.9407 130.953 29.5694 121.489C28.8873 116.733 28.2052 112.304 27.6936 109.097C27.182 105.951 26.841 103.882 26.841 103.882L27.3881 103.712C32.3049 122.917 37.2218 148.028 42.1387 176.913C48.569 182.831 55.0064 187.514 61.4367 191.314V16.1229C59.4969 17.1999 57.5501 18.5431 55.6103 19.7896C54.6369 20.443 53.6706 21.1691 52.6972 21.8589L51.2406 22.9117L49.784 24.0613C45.8974 27.0383 42.0179 30.4751 38.1313 34.3354V59.6393C38.1313 61.5634 39.4955 71.6801 40.8668 82.2446C42.2595 93.0753 43.6024 103.507 43.6024 103.507L43.0553 103.724C38.1384 79.0499 33.2215 58.7559 28.3047 45.0814C26.6989 47.0297 25.086 49.0506 23.4802 51.1805C21.8744 53.3466 20.2615 55.6459 18.6557 57.9088C15.437 62.7615 12.2254 67.7835 9.00666 74.1004L5.32617 103.507L9.00666 133.349L8.99956 133.336Z"
+              d="M179.83 1943.82C230.822 2048.76 245.831 2173.45 296.824 2249.27C347.817 2326.27 398.623 2292.42 449.616 2352.5L485.506 1988.3C485.506 1962.19 467.608 1811.72 449.616 1680.83C440.666 1615.05 431.717 1553.79 425.005 1509.44C418.293 1465.92 413.818 1437.3 413.818 1437.3L420.996 1434.96C485.506 1700.58 533.33 2125.13 597.84 2524.66C682.206 2606.51 783.353 2594.03 867.719 2646.59V223.492C842.269 238.389 818.233 219.149 792.783 236.389C780.011 245.427 768.044 238.005 755.273 247.545L733.724 258.804L708.014 288.69C657.022 329.865 612.942 348.601 561.949 401.993V825.374C561.949 851.987 579.848 991.913 597.84 1138.03C616.111 1287.83 633.73 1432.11 633.73 1432.11L626.552 1435.12C562.042 1093.84 485.506 722.035 420.996 532.901C399.928 559.848 383.681 567.105 362.613 596.563C341.545 626.524 327.494 677.08 306.426 708.379C264.196 775.496 222.059 844.957 179.83 932.327L179.736 1435.12L179.83 1844.86V1943.82Z"
               fill="#61060F" />
             <path
-              d="M73.2547 197.896C77.821 199.833 82.3873 201.055 86.9536 202.108L90.3818 202.725C90.9543 202.822 91.5269 202.943 92.0925 203.015L93.8031 203.197L97.2313 203.572L100.66 203.705L102.253 175.509C102.694 167.728 103.315 146.901 103.819 128.023C104.295 109.133 104.722 92.2396 104.722 92.2396H105.433C105.433 92.2396 107.026 159.571 107.909 175.4L109.502 203.487C118.635 202.652 127.768 200.377 136.9 196.045C140.198 132.973 143.502 72.6596 146.799 16.7635C139.197 12.0803 131.596 8.64351 123.995 6.54998L122.049 58.6221C121.698 68.7751 121.56 90.1219 121.518 108.927C121.477 127.733 121.518 143.985 121.518 143.985L120.284 144.118C120.284 144.118 119.932 127.866 119.401 108.964C118.87 90.0735 118.166 68.521 117.456 58.1622L113.924 4.43224C108.033 3.63355 102.136 3.51254 96.2449 3.97239L92.3546 57.8597C91.5614 68.2789 90.9406 89.9766 90.5198 109.012C90.099 128.047 89.8783 144.469 89.8783 144.469L88.6436 144.372C88.6436 144.372 88.685 127.975 88.6436 108.988C88.6022 90.013 88.4643 68.4605 88.1125 58.1985L86.1673 5.49716C78.566 7.19135 70.9646 10.0836 63.3633 14.2706C66.6604 72.0788 69.9644 133.796 73.2616 197.909L73.2547 197.896Z"
+              d="M1034.01 2755.88C1099.07 2782.66 1164.12 2799.56 1229.18 2814.13L1278.03 2822.66C1286.18 2824 1294.34 2825.68 1302.4 2826.68L1326.77 2829.19L1375.61 2834.38L1424.46 2836.22L1447.16 2446.23C1453.45 2338.61 1462.29 2050.55 1469.47 1789.44C1476.25 1528.17 1482.34 1294.51 1482.34 1294.51H1492.46C1492.46 1294.51 1515.16 2225.8 1527.74 2444.72L1550.45 2833.21C1680.56 2821.66 1810.68 2790.19 1940.8 2730.27C1987.77 1857.9 2034.85 1023.69 2081.82 250.578C1973.52 185.804 1865.22 138.268 1756.92 109.312L1729.21 829.536C1724.2 969.965 1722.23 1265.22 1721.64 1525.32C1721.05 1785.43 1721.64 2010.21 1721.64 2010.21L1704.05 2012.05C1704.05 2012.05 1699.04 1787.27 1691.47 1525.82C1683.9 1264.55 1673.88 966.45 1663.76 823.175L1613.44 80.0212C1529.51 68.9743 1445.49 67.3006 1361.56 73.6609L1306.13 818.991C1294.83 963.103 1285.99 1263.21 1279.99 1526.49C1274 1789.78 1270.85 2016.91 1270.85 2016.91L1253.26 2015.57C1253.26 2015.57 1253.85 1788.77 1253.26 1526.16C1252.67 1263.71 1250.7 965.613 1245.69 823.678L1217.98 94.7504C1109.68 118.183 1001.38 158.186 893.08 216.099C940.056 1015.66 987.13 1869.28 1034.11 2756.05L1034.01 2755.88Z"
+              fill="#61060F" />
+            <path fill-rule="evenodd" clip-rule="evenodd"
+              d="M1977.7 2720.07C2036.67 2687.99 2095.65 2650.61 2154.63 2608.47C2213.61 2565.27 2272.58 2517.32 2331.56 2462.84L2342.59 2175.28C2369.99 2156.76 2397.5 2136.31 2424.9 2115.86L2441.38 2353.17C2500.36 2289.53 2559.34 2220.41 2618.32 2138.96C2677.29 2058.74 2736.27 1971.64 2795.25 1860.03L2586.74 675.229C2453.26 502.798 2319.79 373.21 2186.21 272.008C2116.74 990.295 2047.16 1821.6 1977.7 2720.07ZM2361.75 1774.35L2358.96 1873.08L2359.07 1873.26C2377.27 1865.68 2395.57 1857.21 2413.87 1849.1L2411.09 1757.42C2405.31 1538.44 2391.93 1029.26 2391.93 1029.26L2380.91 1024.68C2380.91 1024.68 2367.53 1549.02 2361.75 1774.35Z"
               fill="#61060F" />
             <path
-              d="M142.596 197.639C146.712 195.323 150.829 192.626 154.946 189.584C159.063 186.467 163.18 183.005 167.296 179.073L168.066 158.319C169.979 156.983 171.899 155.507 173.812 154.031L174.962 171.159C179.079 166.565 183.196 161.577 187.313 155.698C191.429 149.908 195.546 143.622 199.663 135.567C197.235 129.968 194.814 118.961 192.386 104.416C191.175 97.1373 189.957 88.8533 188.747 79.7804C187.537 70.7202 186.319 60.8075 185.108 50.0549C175.792 37.6098 166.475 28.257 157.15 20.9528C152.301 72.7944 147.445 132.793 142.596 197.639ZM169.209 136.508L169.403 129.382C169.807 113.12 170.741 75.2758 170.741 75.2758L171.51 75.6066C171.51 75.6066 172.444 112.356 172.848 128.161L173.042 134.778C171.764 135.363 170.487 135.974 169.217 136.521L169.209 136.508Z"
-              fill="#61060F" />
-            <path
-              d="M205 105.048C205 131.369 194.591 154.004 177.609 171.696C159.384 190.695 133.599 202.554 105 202.554C76.4012 202.554 50.616 190.707 32.3909 171.708C15.4164 154.004 5 130.092 5 103.771C5 77.4507 15.4093 53.5748 32.3767 35.8584C50.6089 16.8593 76.4012 5 105 5C133.599 5 159.405 16.8714 177.623 35.8705C194.598 53.5869 205 77.4749 205 103.783V105.048Z"
-              stroke="#61060F" stroke-width="10" stroke-miterlimit="10" />
+              d="M2836.21 1436.3C2836.21 1800.34 2692.29 2130.91 2457.41 2375.62C2205.33 2638.4 1848.69 2802.43 1453.13 2802.43C1057.57 2802.43 700.929 2638.57 448.852 2375.79C214.072 2130.91 70 1800.18 70 1436.13C70 1072.09 213.974 741.852 448.656 496.812C700.831 234.03 1057.57 70 1453.13 70C1848.69 70 2205.63 234.197 2457.6 496.979C2692.38 742.019 2836.26 1072.42 2836.26 1436.3H2836.21Z"
+              stroke="#61060F" stroke-width="140" stroke-miterlimit="10" />
           </svg>
         </div>
 
@@ -175,36 +192,23 @@
 
     <div class="horizontal-track">
       <div class="content-block" data-trigger-set="1">
-        <p>1986. Compton, Californie. Eric Wright, dit <a href="#" class="definition">Eazy-E</a>, survit grâce au deal
-          de crack dans les rues. Quand son cousin se fait abattre, il comprend qu'il doit changer de voie. Avec 7 000
-          dollars de ses économies illicites, il décide de miser sur le hip-hop qui explose dans son quartier.</p>
+        <span class="content-block-title">N.W.A</span>
+        <p>Compton, Californie. Eazy-E, survit grâce au deal de crack dans les rues. Avec ses économies illicites, il décide de miser sur le hip-hop.</p>
       </div>
       <div class="content-block">
-        <p>Eazy-E installe un micro et des panneaux d'isolation dans le garage de ses parents. C'est là que tout
-          commence. Andre Young, alias <a href="#" class="definition">Dr. Dre</a>, lui propose de monter un label
-          ensemble. Eazy trouve le nom : <a href="#" class="definition">Ruthless Records</a>. Le premier label de
-          gangsta rap de l'histoire vient de naître.</p>
+        <p>Eazy-E loue un studios d'enregistrement. C'est là que tout commence. Dr. Dre, lui propose de monter un label ensemble. Eazy trouve le nom : Ruthless Records. Le premier label de gangsta rap de l'histoire vient de naître.</p>
       </div>
       <div class="content-block" data-trigger-set="2">
-        <p>Dr. Dre écrit un morceau avec O'Shea Jackson, un jeune rappeur prometteur qui deviendra <a href="#"
-            class="definition">Ice Cube</a>. Le titre s'appelle "Boyz-N-The-Hood". Problème : le groupe new-yorkais
-          censé l'interpréter refuse. Dre convainc alors Eazy d'entrer lui-même dans la cabine. Il n'a jamais rappé de
-          sa vie.</p>
+        <p>Ice Cube écrit un premier morceau, produit par Dr. Dre. Problème : le groupe new-yorkais de Rnb censé l'interpréter refuse. Dre convainc alors Eazy-E d'entrer lui-même dans la cabine. Il rap pour la première fois.</p>
       </div>
       <div class="content-block">
-        <p>Contre toute attente, Eazy-E livre une performance brute et authentique. Le morceau devient un hit local
-          instantané. 5 000 vinyles sont pressés avec l'argent du deal. Ils s'écoulent en quelques semaines dans les
-          rues de Compton et de Los Angeles.</p>
+        <p>Eazy-E livre une performance exceptionnel. Le morceau devient un hit local instantané. 5 000 vinyles sont pressés avec l'argent du deal. Ils s'écoulent en quelques semaines dans les rues de Compton et de Los Angeles.</p>
       </div>
       <div class="content-block" data-trigger-set="3">
-        <p>Le succès attire l'attention de Jerry Heller, un manager blanc en perte de vitesse qui cherche à se relancer.
-          Il propose à Eazy-E de gérer sa carrière et de co-diriger Ruthless Records. Le deal est scellé. L'empire est
-          en marche.</p>
+        <p>Le succès attire l'attention de Jerry Heller, un manager blanc en perte de vitesse qui cherche à se relancer. Il propose à Eazy-E de gérer sa carrière et de co-diriger Ruthless Records. Le deal est scellé. L'empire est en marche.</p>
       </div>
       <div class="content-block">
-        <p>En 1988, Eazy-E sort son premier album solo : "Eazy-Duz-It". Le disque atteint le double platine. Mais ce
-          n'est que le début. Avec Dr. Dre, Ice Cube, DJ Yella et MC Ren, il forme un groupe qui va changer l'histoire
-          du rap : <a href="#" class="definition">N.W.A</a> — Niggaz Wit Attitudes.</p>
+        <p>En 1988, Eazy-E sort son premier album solo : "Eazy-Duz-It". Le disque atteint le double platine.  Avec Dr. Dre, Ice Cube, DJ Yella et MC Ren, il forme un groupe qui va changer l'histoire du rap : N.W.A — Niggaz Wit Attitudes.</p>
       </div>
       <div class="track-spacer"></div>
     </div>
@@ -232,34 +236,22 @@
 
     <div class="horizontal-track">
       <div class="content-block" data-trigger-set="1">
-        <p>Jerry Heller décroche un contrat de distribution avec <a href="#" class="definition">Priority Records</a>.
-          N.W.A peut enfin enregistrer son premier album dans des conditions professionnelles. Direction les studios
-          Audio Achievements de Torrance, Californie. Le budget : 8 000 dollars seulement.</p>
+        <p>Jerry Heller décroche un contrat de distribution avec Priority Records. N.W.A peut enfin enregistrer son premier album dans des conditions professionnelles.</p>
       </div>
       <div class="content-block">
-        <p>Le groupe enchaîne les concerts dans des patinoires et des clubs de Los Angeles. Leur énergie sur scène est
-          explosive. Ice Cube écrit la majorité des textes, Dr. Dre et DJ Yella assurent la production. MC Ren apporte
-          sa flow agressive. La chimie est parfaite.</p>
+        <p>Le groupe enchaîne les concerts dans des clubs de Los Angeles. Leur énergie sur scène est explosive. Ice Cube et MC Ren écrivent la majorité des textes, Dr. Dre et DJ Yella assurent la production.</p>
       </div>
       <div class="content-block" data-trigger-set="2">
-        <p>Un jour, alors qu'ils enregistrent devant le studio, des flics les plaquent au sol, armes au poing. Leur
-          crime ? Ressembler à des gangsters. Cette humiliation va inspirer à Ice Cube le morceau le plus provocateur de
-          l'histoire du rap.</p>
+        <p>Alors qu'ils prennent une pause devant le studio, des flics les plaquent au sol, armes au poing. Leur crime ? Être noir. Cette humiliation va inspirer Ice Cube pour le morceau le plus provocateur de l'histoire du rap.</p>
       </div>
       <div class="content-block">
-        <p>"Fuck Tha Police" naît de cette rage. Le titre met en scène un procès fictif où les flics sont jugés pour
-          brutalité et racisme. Dr. Dre hésite d'abord — il sort régulièrement de prison et craint les représailles.
-          Mais après s'être fait arrêter pour avoir tiré au paintball sur des passants, il accepte.</p>
+        <p>"Fuck Tha Police" naît de cette rage. Le titre fait part d'une dénonciation percutante des violences policières et du racisme systémique.</p>
       </div>
       <div class="content-block" data-trigger-set="3">
-        <p>Août 1988. <a href="#" class="definition">"Straight Outta Compton"</a> sort dans les bacs. Sans passage
-          radio, sans clip sur MTV — le clip du titre éponyme est immédiatement banni. Pourtant, l'album se vend à 500
-          000 exemplaires en six semaines. Le bouche-à-oreille est dévastateur.</p>
+        <p>Août 1988. "Straight Outta Compton" sort dans les bacs. L'album se vend à 500 000 exemplaires en six semaines. Le bouche-à-oreille est dévastateur.</p>
       </div>
       <div class="content-block">
-        <p>L'album devient l'un des premiers à porter le label <a href="#" class="definition">"Parental Advisory"</a>.
-          La presse le qualifie de "gangsta rap". N.W.A ne cherche pas à plaire : ils documentent la réalité brutale des
-          rues de Compton. Et l'Amérique, fascinée et terrifiée, ne peut plus détourner le regard.</p>
+        <p>L'album devient l'un des premiers à porter le label "Parental Advisory". La presse le qualifie de "gangsta rap". N.W.A ne cherche pas à plaire : ils documentent la réalité brutale des rues de Compton.</p>
       </div>
       <div class="track-spacer"></div>
     </div>
@@ -283,40 +275,38 @@
         <div class="layer-bg" style="background-image: url('img/chapitre3_bg3.png');"></div>
         <div class="layer-main" style="background-image: url('img/chapitre3_main3.png');"></div>
       </div>
+      <div class="parallax-set" data-set="4">
+        <div class="layer-bg" style="background-image: url('img/chapitre3_bg4.png');"></div>
+        <div class="layer-main" style="background-image: url('img/chapitre3_main4.png');"></div>
+      </div>
+      <div class="parallax-set" data-set="5">
+        <div class="layer-bg" style="background-image: url('img/chapitre3_bg5.png');"></div>
+        <div class="layer-main" style="background-image: url('img/chapitre3_main5.png');"></div>
+      </div>
+      <div class="parallax-set" data-set="6">
+        <div class="layer-bg" style="background-image: url('img/chapitre3_bg6.png');"></div>
+        <div class="layer-main" style="background-image: url('img/chapitre3_main6.png');"></div>
+      </div>
     </div>
 
     <div class="horizontal-track">
       <div class="content-block" data-trigger-set="1">
-        <p>1989. N.W.A part en tournée nationale. Mais "Fuck Tha Police" a mis le feu aux poudres. Un réseau informel de
-          policiers s'organise à travers le pays pour faire annuler leurs concerts. Washington, Chattanooga, Milwaukee,
-          Tyler — partout, les shows sont menacés ou annulés.</p>
-      </div>
-      <div class="content-block">
-        <p>Le 1er août 1989, le <a href="#" class="definition">FBI</a> frappe. L'assistant directeur Milt Ahlerich
-          envoie une lettre officielle à Priority Records. Le message est clair : le Bureau considère que "Fuck Tha
-          Police" incite à la violence contre les forces de l'ordre. C'est la première fois qu'une agence fédérale s'en
-          prend ainsi à un groupe de musique.</p>
+        <p>N.W.A part en tournée nationale. Mais "Fuck Tha Police" a mis le feu aux poudres.</p>
       </div>
       <div class="content-block" data-trigger-set="2">
-        <p>En pleine tournée, Dr. Dre reçoit un appel dévastateur. Son petit frère <a href="#"
-            class="definition">Tyree</a>, 21 ans, vient d'être tué dans une bagarre de rue sur Crenshaw Boulevard, à
-          Compton. Sa nuque a été brisée. Le meurtre ne sera jamais élucidé. Dre est anéanti, mais le show doit
-          continuer.</p>
-      </div>
-      <div class="content-block">
-        <p>6 août 1989. Detroit. Joe Louis Arena. 20 000 fans attendent N.W.A. La police locale a formellement interdit
-          au groupe de jouer "Fuck Tha Police" sous peine d'arrestation. Les assureurs menacent d'annuler la couverture
-          du concert si les flics refusent d'assurer la sécurité.</p>
+        <p>Le 1er août 1989, le FBI frappe. Ils envoie une lettre officielle à Priority Records. Le message est clair : le Bureau considère que "Fuck Tha Police" incite à la violence contre les forces de l'ordre. C'est la première fois qu'une agence fédérale s'en prend ainsi à un groupe de musique.</p>
       </div>
       <div class="content-block" data-trigger-set="3">
-        <p>La foule scande "Fuck Tha Police". N.W.A décide de défier l'interdiction. Dès les premières notes, un pétard
-          explose dans la salle — la foule croit à un coup de feu. Le groupe est évacué en urgence. À leur hôtel, les
-          flics les attendent. Ils sont arrêtés et interrogés pendant une heure.</p>
+        <p>En pleine tournée, Dr. Dre reçoit un appel dévastateur. Son petit frère Tyree, 21 ans, vient d'être tué dans une bagarre de rue sur Crenshaw Boulevard, à Compton. Dre est anéanti.</p>
       </div>
-      <div class="content-block">
-        <p>L'incident fait la une des journaux. La lettre du FBI est exposée au <a href="#" class="definition">Rock and
-            Roll Hall of Fame</a> de Cleveland. N.W.A vient de prouver que la musique peut ébranler le système. Leur
-          message résonne dans toute l'Amérique : la brutalité policière n'est plus un secret.</p>
+      <div class="content-block" data-trigger-set="4">
+        <p>6 août 1989. Detroit. Joe Louis Arena. 20 000 fans attendent N.W.A. La police locale a formellement interdit au groupe de jouer "Fuck Tha Police" sous peine d'arrestation.</p>
+      </div>
+      <div class="content-block" data-trigger-set="5">
+        <p>La foule scande "Fuck Tha Police". N.W.A décide de défier l'interdiction. Dès les premières notes, un pétard explose dans la salle, la foule croit à un coup de feu. Le groupe est évacué en urgence. À leur hôtel, les flics les attendent. Ils sont arrêtés et interrogés pendant une heure.</p>
+      </div>
+      <div class="content-block" data-trigger-set="6">
+        <p>L'incident fait la une des journaux. La lettre du FBI est exposée au Rock and Roll Hall of Fame de Cleveland. N.W.A vient de prouver que la musique peut ébranler le système. Leur message résonne dans toute l'Amérique : la brutalité policière n'est plus un secret.</p>
       </div>
       <div class="track-spacer"></div>
     </div>
@@ -339,38 +329,30 @@
         <div class="layer-bg" style="background-image: url('img/chapitre4_bg3.png');"></div>
         <div class="layer-main" style="background-image: url('img/chapitre4_main3.png');"></div>
       </div>
+      <div class="parallax-set" data-set="4">
+        <div class="layer-bg" style="background-image: url('img/chapitre4_bg4.png');"></div>
+        <div class="layer-main" style="background-image: url('img/chapitre4_main4.png');"></div>
+      </div>
     </div>
 
     <div class="horizontal-track">
       <div class="content-block" data-trigger-set="1">
-        <p>Décembre 1989. Ice Cube en a assez. Il a écrit près de la moitié des textes de "Straight Outta Compton", mais
-          ses royalties ne reflètent pas son travail. Quand <a href="#" class="definition">Jerry Heller</a> lui demande
-          de signer un nouveau contrat sans avocat, il refuse et claque la porte.</p>
-      </div>
-      <div class="content-block">
-        <p>Ice Cube s'exile à New York pour enregistrer avec The Bomb Squad, les producteurs de Public Enemy. Son album
-          solo "AmeriKKKa's Most Wanted" sort en 1990 et devient un classique instantané. De leur côté, N.W.A riposte
-          avec "100 Miles and Runnin'" qui l'attaque violemment.</p>
+        <p>Décembre 1989. Ice Cube en a assez. Il a écrit près de la moitié des textes de "Straight Outta Compton", mais ses royalties ne reflètent pas son travail. Quand Jerry Heller lui demande de signer un nouveau contrat sans avocat, il refuse et claque la porte.</p>
       </div>
       <div class="content-block" data-trigger-set="2">
-        <p>Ice Cube répond avec "<a href="#" class="definition">No Vaseline</a>", l'un des diss tracks les plus
-          dévastateurs de l'histoire du rap. Il y accuse Heller de manipuler le groupe et de détourner leur argent. "You
-          let a Jew break up my crew" — le morceau fait scandale mais frappe là où ça fait mal.</p>
+        <p>Ice Cube s'exile à New York pour enregistrer avec The Bomb Squad, les producteurs de Public Enemy. Son album solo "AmeriKKKa's Most Wanted" sort en 1990 et devient un classique instantané. De leur côté, N.W.A riposte avec "100 Miles and Runnin'" qui l'attaque violemment.</p>
       </div>
       <div class="content-block">
-        <p>Dr. Dre commence à étouffer sous le poids des productions. Il découvre, avec l'aide de The D.O.C. et d'un
-          avocat, que Heller les arnaque depuis le début. Les livres de comptes révèlent des détournements massifs. Dre
-          veut partir, mais son contrat le lie à Ruthless Records.</p>
+        <p>Ice Cube répond avec "No Vaseline", l'un des diss tracks les plus dévastateurs de l'histoire du rap. Il y accuse Heller de manipuler le groupe et de détourner leur argent.</p>
       </div>
       <div class="content-block" data-trigger-set="3">
-        <p>Entre en scène <a href="#" class="definition">Suge Knight</a>, un ancien footballeur reconverti en homme
-          d'affaires brutal. Il propose à Dre de monter un nouveau label : <a href="#" class="definition">Death Row
-            Records</a>. Mais d'abord, il faut libérer Dre de son contrat avec Eazy-E.</p>
+        <p>Dr. Dre découvre, avec l'aide de The D.O.C. et d'un avocat, que Heller les arnaque depuis le début. Les livres de comptes révèlent des détournements massifs. Dre veut partir, mais son contrat le lie à Ruthless Records.</p>
       </div>
       <div class="content-block">
-        <p>La légende raconte que Knight et ses hommes de main ont séquestré Eazy-E, le menaçant avec des battes de
-          baseball et lui montrant l'adresse de sa mère. Terrorisé, Eazy signe la libération de Dre et de The D.O.C.
-          N.W.A est officiellement mort. La guerre Ruthless vs Death Row commence.</p>
+        <p>Entre en scène Suge Knight. Il propose à Dre de monter un nouveau label : Death Row Records. Mais il doit d'abord libérer Dre de son contrat avec Eazy-E.</p>
+      </div>
+      <div class="content-block" data-trigger-set="4">
+        <p>Suge Knight et ses hommes de main ont séquestré Eazy-E, le menaçant lui et ça famille. Terrorisé, Eazy signe la libération de Dre et de The D.O.C. N.W.A est officiellement mort. La guerre Ruthless vs Death Row commence.</p>
       </div>
       <div class="track-spacer"></div>
     </div>
@@ -393,38 +375,35 @@
         <div class="layer-bg" style="background-image: url('img/chapitre5_bg3.png');"></div>
         <div class="layer-main" style="background-image: url('img/chapitre5_main3.png');"></div>
       </div>
+      <div class="parallax-set" data-set="4">
+        <div class="layer-bg" style="background-image: url('img/chapitre5_bg4.png');"></div>
+        <div class="layer-main" style="background-image: url('img/chapitre5_main4.png');"></div>
+      </div>
+      <div class="parallax-set" data-set="5">
+        <div class="layer-bg" style="background-image: url('img/chapitre5_bg5.png');"></div>
+        <div class="layer-main" style="background-image: url('img/chapitre5_main5.png');"></div>
+      </div>
+      <div class="parallax-set" data-set="6">
+        <div class="layer-bg" style="background-image: url('img/chapitre5_bg6.png');"></div>
+        <div class="layer-main" style="background-image: url('img/chapitre5_main6.png');"></div>
+      </div>
     </div>
 
     <div class="horizontal-track">
       <div class="content-block" data-trigger-set="1">
-        <p>1992-1994. La guerre des diss tracks fait rage. Dr. Dre sort "The Chronic" sur Death Row et cartonne avec
-          "Fuck Wit Dre Day", qui ridiculise Eazy-E. Ce dernier riposte avec "Real Muthaphuckkin G's". Les anciens
-          frères s'entretuent par albums interposés.</p>
-      </div>
-      <div class="content-block">
-        <p>Début 1994. Eazy-E traverse une mauvaise passe. Sa compagne Tomica Woods découvre que Jerry Heller l'a
-          arnaqué pendant des années — factures impayées, chèques sans provision, détournements. Eazy le confronte et le
-          vire de Ruthless Records. Leur association de huit ans prend fin.</p>
+        <p>Début 1994. La compagne de Easy, Tomica Woods découvre que Jerry Heller l'a arnaqué pendant des années factures impayées, chèques sans provision, détournements. Eazy le confronte et le vire de Ruthless Records. Leur association de huit ans prend fin.</p>
       </div>
       <div class="content-block" data-trigger-set="2">
-        <p>Dans une boîte de nuit de Los Angeles, Eazy-E croise Ice Cube. Les deux hommes discutent. Ice Cube a aimé
-          "Boyz n the Hood", le film dans lequel il a joué. Les rancœurs s'apaisent. Pour la première fois depuis cinq
-          ans, une réconciliation semble possible.</p>
-      </div>
-      <div class="content-block">
-        <p>Eazy appelle Dr. Dre. Il lui propose de reformer N.W.A pour un dernier album — sans Jerry Heller cette fois.
-          Dre, qui étouffe sous le règne de plus en plus violent de Suge Knight chez Death Row, est tenté. Les trois
-          anciens ennemis prévoient de se retrouver pour sceller la paix.</p>
+        <p>Eazy appelle Dr. Dre. Il lui propose de reformer N.W.A pour un dernier album sans Jerry Heller cette fois. Dre, qui étouffe sous le règne de plus en plus violent de Suge Knight quitte Death Row pour crée son propre label Aftermath Entertainment.</p>
       </div>
       <div class="content-block" data-trigger-set="3">
-        <p>24 février 1995. Lors de la réunion, Eazy-E tousse violemment et s'effondre. À l'hôpital, le diagnostic tombe
-          comme un couperet : <a href="#" class="definition">SIDA</a>. Il l'a contracté lors de rapports non protégés.
-          Il lui reste quelques semaines à vivre. Eazy épouse Tomica douze jours avant la fin.</p>
+        <p>Dans une boîte de nuit de Los Angeles, Eazy-E croise Ice Cube. Les deux hommes discutent. Easy-E a aimé "Boyz n the Hood", le film dans lequel Ice Cube a joué. Pour la première fois depuis cinq ans, une réconciliation semble possible.</p>
       </div>
-      <div class="content-block">
-        <p>26 mars 1995. Eric "Eazy-E" Wright meurt à 30 ans. Dr. Dre et Ice Cube lui rendent visite à l'hôpital, le
-          trouvent dans le coma. Ils n'ont pas pu lui dire au revoir. Les querelles s'éteignent avec lui. Le père
-          fondateur du gangsta rap emporte dans sa tombe le rêve d'une reformation de N.W.A.</p>
+      <div class="content-block" data-trigger-set="4">
+        <p>24 février 1995. Lors de la réunion, Eazy-E tousse violemment et s'effondre. À l'hôpital, le diagnostic tombe : SIDA. Il l'a contracté lors de rapports non protégés. Il lui reste quelques semaines à vivre. Eazy épouse Tomica douze jours avant la fin.</p>
+      </div>
+      <div class="content-block" data-trigger-set="5">
+        <p>26 mars 1995. Eric "Eazy-E" Wright meurt à 30 ans. Dr. Dre et Ice Cube lui rendent visite à l'hôpital, le trouvent dans le coma. Ils n'ont pas pu lui dire au revoir. Les querelles s'éteignent avec lui. Le père fondateur du gangsta rap emporte dans sa tombe le rêve d'une reformation de N.W.A.</p>
       </div>
       <div class="track-spacer"></div>
     </div>
