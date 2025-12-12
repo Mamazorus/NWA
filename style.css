@@ -54,12 +54,10 @@ body.in-hero {
   height: 100%;
   overflow: hidden;
   background-color: #0A0A0A;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 80px;
 }
 
 .image-container img {
@@ -68,6 +66,15 @@ body.in-hero {
   max-width: none;
   height: auto;
   margin: 0 -80px;
+  object-fit: cover;
+}
+
+.image-container video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
@@ -604,15 +611,15 @@ body.in-hero {
   flex-shrink: 0;
   width: 500px;
   padding: 45px 28px 30px;
-  margin-right: 500px; /* Espacement équilibré entre les blocs */
+  margin-right: 500px;
+  /* Espacement équilibré entre les blocs */
   position: relative;
   z-index: 10;
   opacity: 0;
   will-change: transform, opacity;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow:
-    3px 5px 0 rgba(0, 0, 0, 0.15),
-    8px 12px 30px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(8px 8px 8px rgba(0, 0, 0, 0.6)) 
+          drop-shadow(12px 12px 16px rgba(0, 0, 0, 0.4));
   overflow: visible;
   /* Pour que le titre puisse dépasser */
 }
@@ -627,8 +634,6 @@ body.in-hero {
   text-transform: uppercase;
   color: #EC1D31;
   font-style: normal;
-
-
   transform: rotate(-8deg);
   z-index: 25;
   white-space: nowrap;
@@ -637,6 +642,7 @@ body.in-hero {
 
 /* === TITRE DÉTACHÉ (hors du bloc) === */
 .title-detached {
+  letter-spacing: 1.5px;
   position: absolute;
   font-family: 'Mistral', cursive;
   font-size: 72px;
@@ -644,18 +650,17 @@ body.in-hero {
   font-style: normal;
   text-transform: uppercase;
   color: #EC1D31;
-
   transform: rotate(-18deg) skewY(-15deg);
   z-index: 9999;
   white-space: nowrap;
-  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.0);
   pointer-events: none;
-  mix-blend-mode: multiply;
+  mix-blend-mode: normal;
 }
 
 /* Variations de rotation pour les titres détachés */
 .content-block:nth-child(odd)~.title-detached {
-  transform: rotate(-20deg) skewY(-1deg);
+  transform: rotate(-10deg) skewY(-1deg);
 }
 
 .content-block:nth-child(even)~.title-detached {
@@ -746,9 +751,6 @@ body.in-hero {
       100% 5%, 98% 15%, 100% 30%, 97% 50%, 100% 70%, 98% 85%, 100% 95%,
       92% 100%, 75% 97%, 55% 100%, 35% 97%, 15% 100%, 3% 97%,
       0% 90%, 3% 70%, 0% 50%, 3% 30%, 0% 10%);
-  box-shadow:
-    1px 2px 0 rgba(0, 0, 0, 0.1),
-    4px 6px 15px rgba(0, 0, 0, 0.25);
   --block-rotation: 2.5deg;
 }
 
@@ -895,9 +897,8 @@ body.in-hero {
 }
 
 .content-block:hover {
-  box-shadow:
-    4px 6px 0 rgba(0, 0, 0, 0.18),
-    10px 15px 35px rgba(0, 0, 0, 0.35);
+  filter: drop-shadow(6px 6px 6px rgba(0, 0, 0, 0.5)) 
+          drop-shadow(10px 10px 12px rgba(0, 0, 0, 0.35));
 }
 
 .content-block h2 {
@@ -927,21 +928,24 @@ body.in-hero {
   -webkit-text-stroke-color: black;
   text-align: left;
 }
+
 /* Liens définitions */
 .definition {
   text-decoration: none;
   background-image: url('img/graf-under.svg');
-  background-repeat: repeat-x;
+  background-repeat: no-repeat;
   background-position: 0 100%;
-  background-size: auto 5px;
+  background-size: 100% 8px;
   padding-bottom: 4px;
   cursor: help;
-  color: #000000;
-  transition: color 0.2s ease;
+  color: #61060F;
+  -webkit-text-stroke-color: #61060F;
+  transition: color 0.2s ease, background-image 0.2s ease;
 }
 
 .definition:hover {
   color: #EC1D31;
+  background-image: url('img/graf-under-hover.svg');
 }
 
 /* ============================================
@@ -1129,7 +1133,7 @@ body.in-hero {
   text-transform: uppercase;
   letter-spacing: 8px;
   text-shadow: 0 0 60px rgba(236, 29, 49, 0.6),
-               0 0 120px rgba(236, 29, 49, 0.3);
+    0 0 120px rgba(236, 29, 49, 0.3);
   animation: none;
 }
 
@@ -1138,13 +1142,16 @@ body.in-hero {
 }
 
 @keyframes chapterTitlePulse {
-  0%, 100% {
+
+  0%,
+  100% {
     text-shadow: 0 0 60px rgba(236, 29, 49, 0.6),
-                 0 0 120px rgba(236, 29, 49, 0.3);
+      0 0 120px rgba(236, 29, 49, 0.3);
   }
+
   50% {
     text-shadow: 0 0 100px rgba(236, 29, 49, 0.9),
-                 0 0 180px rgba(236, 29, 49, 0.5);
+      0 0 180px rgba(236, 29, 49, 0.5);
   }
 }
 
@@ -1259,11 +1266,25 @@ body.in-hero {
 }
 
 /* Position des marqueurs - calibrés avec la progression (5 chapitres = 20% chacun) */
-.progress-marker[data-chapter="1"] { left: 0%; }
-.progress-marker[data-chapter="2"] { left: 20%; }
-.progress-marker[data-chapter="3"] { left: 40%; }
-.progress-marker[data-chapter="4"] { left: 60%; }
-.progress-marker[data-chapter="5"] { left: 80%; }
+.progress-marker[data-chapter="1"] {
+  left: 0%;
+}
+
+.progress-marker[data-chapter="2"] {
+  left: 20%;
+}
+
+.progress-marker[data-chapter="3"] {
+  left: 40%;
+}
+
+.progress-marker[data-chapter="4"] {
+  left: 60%;
+}
+
+.progress-marker[data-chapter="5"] {
+  left: 80%;
+}
 
 .progress-marker::before {
   content: attr(data-chapter);
@@ -1302,15 +1323,15 @@ body.in-hero {
   .progress-bar-container {
     top: 20px;
   }
-  
+
   .progress-track {
     width: 200px;
   }
-  
+
   .progress-chapter-number {
     font-size: 22px;
   }
-  
+
   .progress-chapter-name {
     font-size: 12px;
   }
@@ -1354,11 +1375,18 @@ body::-webkit-scrollbar {
 }
 
 .entry-content {
+  height: 100vh;
+  width: 100vw;  
   text-align: center;
   pointer-events: auto;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.5) 40%, transparent 70%);
-  padding: 80px 120px;
-  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 0px;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
 }
 
 .entry-overlay.hidden .entry-content {

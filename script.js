@@ -91,7 +91,7 @@ function animateCarouselEntry() {
   // Phase 1 : Disparition du contenu d'entrée
   tl.to(entryContent, {
     opacity: 0,
-    scale: 0.9,
+    scale: 1.1,
     duration: 0.5,
     ease: 'power2.in'
   });
@@ -1845,6 +1845,9 @@ function initCharacterCards() {
   
   // Écouter les mouvements sur la hero section
   heroSection.addEventListener('mousemove', (e) => {
+    // Bloquer le hover tant que le site n'est pas déverrouillé
+    if (!siteUnlocked) return;
+    
     const card = CharacterHitbox.findCharacterAt(e.clientX, e.clientY);
     updateHover(card);
     
@@ -1865,6 +1868,9 @@ function initCharacterCards() {
   
   // Clic
   heroSection.addEventListener('click', (e) => {
+    // Bloquer les clics tant que le site n'est pas déverrouillé
+    if (!siteUnlocked) return;
+    
     // Ignorer si on clique sur l'overlay ou le panel
     if (e.target.closest('.character-info') || e.target.closest('.character-overlay')) return;
     
