@@ -102,7 +102,7 @@ body.in-hero {
 
 .carousel-track {
   display: flex;
-  gap: 20px;
+  gap: 100px;
   width: max-content;
   will-change: transform;
   backface-visibility: hidden;
@@ -164,7 +164,7 @@ body.in-hero {
 }
 
 .person-card {
-  width: 650px;
+  width: 700px;
   height: 750px;
   display: flex;
   align-items: center;
