@@ -36,7 +36,19 @@ function initEntryScreen() {
     ChapterMusicManager.isUserInteracted = true;
     ChapterMusicManager.isSoundMuted = false;
     
-    // Précharger et préparer les audios
+    // Lancer immédiatement la musique hero
+    if (ChapterMusicManager.heroAudio) {
+      ChapterMusicManager.heroAudio.currentTime = ChapterMusicManager.heroMusicStart;
+      ChapterMusicManager.heroAudio.volume = 0;
+      ChapterMusicManager.heroAudio.play().then(() => {
+        ChapterMusicManager.isPlayingHero = true;
+        ChapterMusicManager.fadeTo(ChapterMusicManager.heroAudio, ChapterMusicManager.heroMusicVolume, 800);
+      }).catch((e) => {
+        console.log('Erreur lecture hero music:', e);
+      });
+    }
+    
+    // Précharger les audios des chapitres (en arrière-plan)
     ChapterMusicManager.audioElements.forEach(({ audio }) => {
       audio.muted = true;
       audio.play().then(() => {
@@ -219,7 +231,20 @@ const ChapterMusicManager = {
   isUserInteracted: false,
   isSoundMuted: true, // Muté par défaut
   
+  // Musique de la hero section
+  heroAudio: null,
+  heroMusicSrc: 'music/prod-f-tha-police.mp3', // Musique hero
+  heroMusicVolume: 0.5,
+  heroMusicStart: 30,
+  isPlayingHero: false,
+  
   init() {
+    // Initialiser la musique hero
+    this.heroAudio = new Audio(this.heroMusicSrc);
+    this.heroAudio.loop = true;
+    this.heroAudio.volume = 0;
+    this.heroAudio.preload = 'auto';
+    
     const sections = document.querySelectorAll('.horizontal-section[data-music]');
     
     sections.forEach(section => {
@@ -241,6 +266,14 @@ const ChapterMusicManager = {
       if (this.isUserInteracted) return;
       this.isUserInteracted = true;
       
+      // Précharger l'audio hero
+      this.heroAudio.muted = true;
+      this.heroAudio.play().then(() => {
+        this.heroAudio.pause();
+        this.heroAudio.currentTime = this.heroMusicStart;
+        this.heroAudio.muted = false;
+      }).catch(() => {});
+      
       // Précharger tous les audios
       this.audioElements.forEach(({ audio }) => {
         audio.muted = true;
@@ -261,6 +294,40 @@ const ChapterMusicManager = {
     
     // Observer pour détecter quel chapitre est le plus visible (>50%)
     this.initChapterObserver();
+  },
+  
+  // Jouer la musique de la hero
+  playHeroMusic() {
+    if (!this.isUserInteracted || this.isSoundMuted) return;
+    if (this.isPlayingHero) return;
+    
+    // Arrêter toute musique de chapitre en cours
+    if (this.currentAudio) {
+      this.fadeTo(this.currentAudio, 0, 500, () => {
+        this.currentAudio.pause();
+      });
+    }
+    
+    this.currentChapter = null;
+    this.isPlayingHero = true;
+    
+    this.heroAudio.currentTime = this.heroMusicStart;
+    this.heroAudio.play().catch(() => {});
+    this.fadeTo(this.heroAudio, this.heroMusicVolume, 800);
+  },
+  
+  // Arrêter la musique de la hero
+  stopHeroMusic(callback) {
+    if (!this.isPlayingHero) {
+      if (callback) callback();
+      return;
+    }
+    
+    this.fadeTo(this.heroAudio, 0, 500, () => {
+      this.heroAudio.pause();
+      this.isPlayingHero = false;
+      if (callback) callback();
+    });
   },
   
   initChapterObserver() {
@@ -314,13 +381,29 @@ const ChapterMusicManager = {
     
     // Si un chapitre est visible à plus de 50%, jouer sa musique
     if (mostVisibleSection && highestVisibility >= 0.5) {
+      // Arrêter la musique hero si elle joue
+      if (this.isPlayingHero) {
+        this.stopHeroMusic();
+      }
+      
       if (this.currentChapter !== mostVisibleSection.id) {
         this.playChapterMusic(mostVisibleSection.id);
       }
     } else {
-      // Aucun chapitre visible à plus de 50%, arrêter la musique
+      // Aucun chapitre visible à plus de 50%
       if (this.currentChapter) {
         this.stopAllMusic();
+      }
+      
+      // Si on est dans la hero section (pas de chapitre visible), jouer la musique hero
+      const heroSection = document.querySelector('.hero-section');
+      if (heroSection) {
+        const heroRect = heroSection.getBoundingClientRect();
+        const isHeroVisible = heroRect.bottom > window.innerHeight * 0.3;
+        
+        if (isHeroVisible && !this.isPlayingHero && !document.body.classList.contains('site-locked')) {
+          this.playHeroMusic();
+        }
       }
     }
   },
@@ -421,6 +504,11 @@ const ChapterMusicManager = {
     
     // Si un chapitre est visible à plus de 50%, lancer sa musique
     if (mostVisibleSection && highestVisibility >= 0.5) {
+      // Arrêter la musique hero si elle joue
+      if (this.isPlayingHero) {
+        this.stopHeroMusic();
+      }
+      
       const chapterData = this.audioElements.get(mostVisibleSection.id);
       if (chapterData) {
         const { audio, startTime, targetVolume } = chapterData;
@@ -433,6 +521,17 @@ const ChapterMusicManager = {
         
         this.currentAudio = audio;
         this.currentChapter = mostVisibleSection.id;
+      }
+    } else {
+      // Aucun chapitre visible, vérifier si on est dans la hero
+      const heroSection = document.querySelector('.hero-section');
+      if (heroSection) {
+        const heroRect = heroSection.getBoundingClientRect();
+        const isHeroVisible = heroRect.bottom > window.innerHeight * 0.3;
+        
+        if (isHeroVisible && !document.body.classList.contains('site-locked')) {
+          this.playHeroMusic();
+        }
       }
     }
   }
@@ -825,10 +924,17 @@ function initSoundToggle() {
       ChapterMusicManager.isSoundMuted = isMuted;
       
       if (isMuted) {
-        // Couper le son
+        // Couper le son - chapitres
         if (ChapterMusicManager.currentAudio) {
           ChapterMusicManager.fadeTo(ChapterMusicManager.currentAudio, 0, 500, () => {
             ChapterMusicManager.currentAudio.pause();
+          });
+        }
+        // Couper le son - hero
+        if (ChapterMusicManager.isPlayingHero && ChapterMusicManager.heroAudio) {
+          ChapterMusicManager.fadeTo(ChapterMusicManager.heroAudio, 0, 500, () => {
+            ChapterMusicManager.heroAudio.pause();
+            ChapterMusicManager.isPlayingHero = false;
           });
         }
       } else {
@@ -1006,6 +1112,8 @@ function initHoverAudio() {
     }, 40);
   }
 
+  let heroVolumeBeforeHover = 0;
+
   function onEnter(e) {
     // Ne pas jouer si le son global est muté
     if (ChapterMusicManager.isSoundMuted) return;
@@ -1018,6 +1126,12 @@ function initHoverAudio() {
     if (ChapterMusicManager.currentAudio && !ChapterMusicManager.currentAudio.paused) {
       chapterVolumeBeforeHover = ChapterMusicManager.currentAudio.volume;
       ChapterMusicManager.fadeTo(ChapterMusicManager.currentAudio, 0, HOVER_FADE_MS);
+    }
+    
+    // Mettre en pause la musique hero avec fade
+    if (ChapterMusicManager.isPlayingHero && ChapterMusicManager.heroAudio && !ChapterMusicManager.heroAudio.paused) {
+      heroVolumeBeforeHover = ChapterMusicManager.heroAudio.volume;
+      ChapterMusicManager.fadeTo(ChapterMusicManager.heroAudio, 0, HOVER_FADE_MS);
     }
     
     let entry = audioMap.get(el);
@@ -1060,6 +1174,11 @@ function initHoverAudio() {
     if (ChapterMusicManager.currentAudio && ChapterMusicManager.currentChapter) {
       const targetVolume = ChapterMusicManager.audioElements.get(ChapterMusicManager.currentChapter)?.targetVolume || 0.6;
       ChapterMusicManager.fadeTo(ChapterMusicManager.currentAudio, targetVolume, HOVER_FADE_MS);
+    }
+    
+    // Reprendre la musique hero avec fade
+    if (ChapterMusicManager.isPlayingHero && ChapterMusicManager.heroAudio) {
+      ChapterMusicManager.fadeTo(ChapterMusicManager.heroAudio, ChapterMusicManager.heroMusicVolume, HOVER_FADE_MS);
     }
   }
 
@@ -1386,7 +1505,7 @@ const chapterData = {
   },
   'chapitre3': {
     title: 'Chapitre III',
-    subtitle: 'Fuck Tha Police',
+    subtitle: 'F*** Tha Police',
     icon: 'img/icon-chapitre3.png'
   },
   'chapitre4': {
@@ -1903,8 +2022,8 @@ function initCharacterCards() {
 // INITIALISATION
 // ============================================
 function init() {
-  initEntryScreen(); // IMPORTANT: Doit être appelé en premier
-  ChapterMusicManager.init();
+  ChapterMusicManager.init(); // IMPORTANT: Doit être appelé en premier pour créer heroAudio
+  initEntryScreen();
   initHorizontalSections();
   initCurtainTransition(); // Après initHorizontalSections pour avoir les ScrollTriggers
   initChapterTransitions(); // Transitions entre chapitres
