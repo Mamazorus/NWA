@@ -1376,23 +1376,28 @@ function initCurtainTransition() {
 const chapterData = {
   'chapitre1': {
     title: 'Chapitre I',
-    subtitle: 'Boyz-N-The-Hood'
+    subtitle: 'Boyz-N-The-Hood',
+    icon: 'img/icon-chapitre1.png'
   },
   'chapitre2': {
     title: 'Chapitre II',
-    subtitle: 'Straight Outta Compton'
+    subtitle: 'Straight Outta Compton',
+    icon: 'img/icon-chapitre2.png'
   },
   'chapitre3': {
     title: 'Chapitre III',
-    subtitle: 'Fuck Tha Police'
+    subtitle: 'Fuck Tha Police',
+    icon: 'img/icon-chapitre3.png'
   },
   'chapitre4': {
     title: 'Chapitre IV',
-    subtitle: 'No Vaseline'
+    subtitle: 'No Vaseline',
+    icon: 'img/icon-chapitre4.png'
   },
   'chapitre5': {
     title: 'Chapitre V',
-    subtitle: 'I Need a Doctor'
+    subtitle: 'I Need a Doctor',
+    icon: 'img/icon-chapitre5.png'
   }
 };
 
@@ -1406,6 +1411,7 @@ function initChapterTransitions() {
   const transitionContent = document.querySelector('.chapter-transition-content');
   const transitionTitle = document.querySelector('.chapter-transition-title');
   const transitionSubtitle = document.querySelector('.chapter-transition-subtitle');
+  const transitionIcon = document.getElementById('chapterTransitionIcon');
   
   if (!transitionOverlay || !transitionPanel) return;
   
@@ -1495,6 +1501,11 @@ function initChapterTransitions() {
     // Mettre à jour le texte de la transition
     transitionTitle.textContent = toChapter.title;
     transitionSubtitle.textContent = toChapter.subtitle;
+    
+    // Mettre à jour l'icône de transition
+    if (transitionIcon && toChapter.icon) {
+      transitionIcon.src = toChapter.icon;
+    }
     
     // Stopper le scroll
     lenis.stop();
@@ -2154,12 +2165,95 @@ function extractTitlesFromBlocks() {
   });
 }
 
+// ============================================
+// LOGO FIXE - RETOUR HERO
+// ============================================
+function initHomeFixedLogo() {
+  const homeFixedLogo = document.getElementById('homeFixedLogo');
+  
+  if (!homeFixedLogo) return;
+  
+  homeFixedLogo.addEventListener('click', (e) => {
+    e.preventDefault();
+    
+    // Utiliser Lenis pour un smooth scroll vers le haut
+    if (typeof lenis !== 'undefined') {
+      lenis.scrollTo(0, { duration: 1.5 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+}
+
+// ============================================
+// ICÔNE CHAPITRE FIXE
+// ============================================
+const ChapterIconManager = {
+  currentChapter: null,
+  iconContainer: null,
+  iconImg: null,
+  
+  init() {
+    this.iconContainer = document.getElementById('chapterIconFixed');
+    this.iconImg = document.getElementById('chapterIconImg');
+    
+    if (!this.iconContainer || !this.iconImg) return;
+    
+    // Observer les changements de chapitre via ChapterMusicManager
+    this.startObserving();
+  },
+  
+  startObserving() {
+    // Vérifier le chapitre courant régulièrement
+    const checkChapter = () => {
+      const currentChapterId = ChapterMusicManager.currentChapter;
+      
+      if (currentChapterId && currentChapterId !== this.currentChapter) {
+        this.updateIcon(currentChapterId);
+      }
+    };
+    
+    // Vérifier toutes les 200ms
+    setInterval(checkChapter, 200);
+  },
+  
+  updateIcon(chapterId) {
+    if (!this.iconContainer || !this.iconImg) return;
+    if (!chapterData[chapterId]) return;
+    
+    const newIcon = chapterData[chapterId].icon;
+    if (!newIcon) return;
+    
+    // Animation de changement
+    this.iconContainer.classList.add('is-changing');
+    
+    setTimeout(() => {
+      this.iconImg.src = newIcon;
+      this.currentChapter = chapterId;
+      
+      // Attendre le chargement de l'image
+      this.iconImg.onload = () => {
+        this.iconContainer.classList.remove('is-changing');
+      };
+      
+      // Fallback si l'image ne charge pas
+      setTimeout(() => {
+        this.iconContainer.classList.remove('is-changing');
+      }, 300);
+    }, 200);
+  }
+};
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     extractTitlesFromBlocks();
+    initHomeFixedLogo();
+    ChapterIconManager.init();
     init();
   });
 } else {
   extractTitlesFromBlocks();
+  initHomeFixedLogo();
+  ChapterIconManager.init();
   init();
 }
