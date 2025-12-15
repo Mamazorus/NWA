@@ -1,14 +1,14 @@
 @font-face {
-  font-family: 'Mistral';
-  src: url('./fonts/MISTRAL.TTF') format('truetype');
-  font-weight: 100 900;
+  font-family: 'Montserrat-Regular';
+  src: url('./font/Montserrat-Regular.ttf') format('truetype');
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Montserrat-Regular';
-  src: url('./fonts/Montserrat-Regular.ttf') format('truetype');
+  font-family: 'Mistral';
+  src: url('./font/MISTRAL.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
