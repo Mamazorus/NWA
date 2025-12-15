@@ -574,4 +574,85 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.continent-group, .merch-card, .ticket-card').forEach(el => {
     observer.observe(el);
   });
+
+  // ============================================
+  // CURSEUR CUSTOM
+  // ============================================
+  initCustomCursor();
 });
+
+// ============================================
+// CURSEUR CUSTOM (FONCTION)
+// ============================================
+function initCustomCursor() {
+  const cursor = document.querySelector('.custom-cursor');
+  const cursorDot = document.querySelector('.cursor-dot');
+  const cursorRing = document.querySelector('.cursor-ring');
+  
+  if (!cursor || !cursorDot || !cursorRing) return;
+  
+  // Position actuelle (avec lerp pour le ring)
+  let mouseX = 0;
+  let mouseY = 0;
+  let ringX = 0;
+  let ringY = 0;
+  
+  // Éléments cliquables
+  const clickables = 'a, button, input[type="submit"], input[type="button"], [role="button"], .tour-nav-logo, .tour-nav-link, .cart-button, .tour-cta, .date-cta, .ticket-option, .merch-card, .merch-add, .size-select, .cart-close, .checkout-btn, .final-cta-primary, .final-cta-secondary, select';
+  
+  // Suivre la souris
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    
+    // Le dot suit instantanément
+    cursorDot.style.left = mouseX + 'px';
+    cursorDot.style.top = mouseY + 'px';
+  });
+  
+  // Animation du ring avec lerp (smooth follow)
+  function animateRing() {
+    // Lerp factor (0.15 = smooth, 1 = instant)
+    const lerp = 0.15;
+    
+    ringX += (mouseX - ringX) * lerp;
+    ringY += (mouseY - ringY) * lerp;
+    
+    cursorRing.style.left = ringX + 'px';
+    cursorRing.style.top = ringY + 'px';
+    
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+  
+  // Hover sur éléments cliquables
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest(clickables)) {
+      cursor.classList.add('is-hovering');
+    }
+  });
+  
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest(clickables)) {
+      cursor.classList.remove('is-hovering');
+    }
+  });
+  
+  // Effet au clic
+  document.addEventListener('mousedown', () => {
+    cursor.classList.add('is-pressing');
+  });
+  
+  document.addEventListener('mouseup', () => {
+    cursor.classList.remove('is-pressing');
+  });
+  
+  // Cacher quand la souris sort de la fenêtre
+  document.addEventListener('mouseleave', () => {
+    cursor.classList.add('is-hidden');
+  });
+  
+  document.addEventListener('mouseenter', () => {
+    cursor.classList.remove('is-hidden');
+  });
+}

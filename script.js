@@ -1965,9 +1965,9 @@ function initCharacterCards() {
     // Appliquer le nouveau hover
     if (card) {
       card.classList.add('is-hovered');
-      heroSection.style.cursor = 'pointer';
+      heroSection.style.cursor = 'none';
     } else {
-      heroSection.style.cursor = '';
+      heroSection.style.cursor = 'none';
     }
     
     currentHoveredCard = card;
@@ -2017,6 +2017,120 @@ function initCharacterCards() {
     if (e.key === 'Escape') closeCharacter();
   });
 }
+
+// ============================================
+// CURSEUR CUSTOM
+// ============================================
+function initCustomCursor() {
+  const cursor = document.querySelector('.custom-cursor');
+  const cursorDot = document.querySelector('.cursor-dot');
+  const cursorRing = document.querySelector('.cursor-ring');
+  
+  if (!cursor || !cursorDot || !cursorRing) return;
+  
+  // Position actuelle (avec lerp pour le ring)
+  let mouseX = 0;
+  let mouseY = 0;
+  let ringX = 0;
+  let ringY = 0;
+  
+  // Éléments cliquables
+  const clickables = 'a, button, input[type="submit"], input[type="button"], [role="button"], .nav-links a, .entry-button, .tour-fixed-button, .home-fixed-logo, .sound-toggle, .navbar, .date-cta, .merch-add, .burger-icon, select, .progress-marker, .chapter-icon-fixed';
+  
+  // Éléments texte
+  const textElements = 'p, h1, h2, h3, h4, h5, h6, span, li, td, th, label, .content-block-text';
+  
+  // Suivre la souris
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    
+    // Le dot suit instantanément
+    cursorDot.style.left = mouseX + 'px';
+    cursorDot.style.top = mouseY + 'px';
+  });
+  
+  // Animation du ring avec lerp (smooth follow)
+  function animateRing() {
+    // Lerp factor (0.15 = smooth, 1 = instant)
+    const lerp = 0.15;
+    
+    ringX += (mouseX - ringX) * lerp;
+    ringY += (mouseY - ringY) * lerp;
+    
+    cursorRing.style.left = ringX + 'px';
+    cursorRing.style.top = ringY + 'px';
+    
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+  
+  // Hover sur éléments cliquables
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest(clickables)) {
+      cursor.classList.add('is-hovering');
+    }
+  });
+  
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest(clickables)) {
+      cursor.classList.remove('is-hovering');
+    }
+  });
+  
+  // Observer les person-card pour détecter .is-hovered (car ils ont pointer-events: none)
+  const personCards = document.querySelectorAll('.person-card');
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'class') {
+        const card = mutation.target;
+        if (card.classList.contains('is-hovered')) {
+          cursor.classList.add('is-hovering');
+        } else {
+          // Vérifier si aucune autre card n'est hovered
+          const anyHovered = document.querySelector('.person-card.is-hovered');
+          if (!anyHovered) {
+            cursor.classList.remove('is-hovering');
+          }
+        }
+      }
+    });
+  });
+  
+  personCards.forEach(card => {
+    observer.observe(card, { attributes: true, attributeFilter: ['class'] });
+  });
+  
+  // Hover sur texte (optionnel - désactivé par défaut car peut être trop)
+  // document.addEventListener('mouseover', (e) => {
+  //   if (e.target.matches(textElements) && !e.target.closest(clickables)) {
+  //     cursor.classList.add('is-text');
+  //   }
+  // });
+  // document.addEventListener('mouseout', (e) => {
+  //   if (e.target.matches(textElements)) {
+  //     cursor.classList.remove('is-text');
+  //   }
+  // });
+  
+  // Effet au clic
+  document.addEventListener('mousedown', () => {
+    cursor.classList.add('is-pressing');
+  });
+  
+  document.addEventListener('mouseup', () => {
+    cursor.classList.remove('is-pressing');
+  });
+  
+  // Cacher quand la souris sort de la fenêtre
+  document.addEventListener('mouseleave', () => {
+    cursor.classList.add('is-hidden');
+  });
+  
+  document.addEventListener('mouseenter', () => {
+    cursor.classList.remove('is-hidden');
+  });
+}
     
 // ============================================
 // INITIALISATION
@@ -2037,6 +2151,7 @@ function init() {
   initHoverAudio();
   initSmoothCarousels();
   initCharacterCards(); // Personnages cliquables
+  initCustomCursor(); // Curseur personnalisé
 }
 
 // ============================================
@@ -2311,6 +2426,15 @@ const ChapterIconManager = {
   currentChapter: null,
   iconContainer: null,
   iconImg: null,
+  isPaused: false,
+  
+  // Scrubbing vinyle
+  isDragging: false,
+  startAngle: 0,
+  currentRotation: 0,
+  lastAngle: 0,
+  scratchAudio: null,
+  wasPlayingBeforeDrag: false,
   
   init() {
     this.iconContainer = document.getElementById('chapterIconFixed');
@@ -2318,22 +2442,289 @@ const ChapterIconManager = {
     
     if (!this.iconContainer || !this.iconImg) return;
     
+    // Créer l'audio de scratch
+    this.scratchAudio = new Audio('music/vinyl-scratch.mp3');
+    this.scratchAudio.loop = true;
+    this.scratchAudio.volume = 0.3;
+    
     // Observer les changements de chapitre via ChapterMusicManager
     this.startObserving();
+    
+    // Initialiser le scrubbing vinyle
+    this.initVinylScrubbing();
+  },
+  
+  initVinylScrubbing() {
+    const icon = this.iconContainer;
+    if (!icon) return;
+    
+    let dragStartTime = 0;
+    let hasMoved = false;
+    
+    // Mouse events
+    icon.addEventListener('mousedown', (e) => {
+      dragStartTime = Date.now();
+      hasMoved = false;
+      this.onDragStart(e);
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (this.isDragging) {
+        hasMoved = true;
+        this.onDragMove(e);
+      }
+    });
+    
+    document.addEventListener('mouseup', (e) => {
+      if (this.isDragging) {
+        const dragDuration = Date.now() - dragStartTime;
+        this.onDragEnd(e);
+        
+        // Si c'était un simple clic (court et pas de mouvement), toggle play/pause
+        if (dragDuration < 200 && !hasMoved) {
+          this.togglePlayPause();
+        }
+      }
+    });
+    
+    // Touch events
+    icon.addEventListener('touchstart', (e) => {
+      dragStartTime = Date.now();
+      hasMoved = false;
+      this.onDragStart(e);
+    }, { passive: false });
+    
+    document.addEventListener('touchmove', (e) => {
+      if (this.isDragging) {
+        hasMoved = true;
+        this.onDragMove(e);
+      }
+    }, { passive: false });
+    
+    document.addEventListener('touchend', (e) => {
+      if (this.isDragging) {
+        const dragDuration = Date.now() - dragStartTime;
+        this.onDragEnd(e);
+        
+        // Si c'était un simple tap (court et pas de mouvement), toggle play/pause
+        if (dragDuration < 200 && !hasMoved) {
+          this.togglePlayPause();
+        }
+      }
+    });
+    
+    // Empêcher le comportement par défaut
+    icon.addEventListener('dragstart', (e) => e.preventDefault());
+  },
+  
+  getAngleFromCenter(e) {
+    const rect = this.iconContainer.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    const deltaX = clientX - centerX;
+    const deltaY = clientY - centerY;
+    
+    return Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+  },
+  
+  onDragStart(e) {
+    // Empêcher le comportement par défaut sur touch
+    if (e.touches) e.preventDefault();
+    
+    this.isDragging = true;
+    this.startAngle = this.getAngleFromCenter(e);
+    this.lastAngle = this.startAngle;
+    
+    // Sauvegarder l'état de lecture
+    const currentAudio = this.getCurrentAudio();
+    if (currentAudio) {
+      this.wasPlayingBeforeDrag = !currentAudio.paused;
+      currentAudio.pause();
+    }
+    
+    // Stopper l'animation CSS
+    this.iconContainer.classList.remove('is-playing');
+    this.iconContainer.classList.add('is-scrubbing');
+    
+    // Jouer le son de scratch
+    if (this.scratchAudio && !ChapterMusicManager.isSoundMuted) {
+      this.scratchAudio.currentTime = 0;
+      this.scratchAudio.play().catch(() => {});
+    }
+  },
+  
+  onDragMove(e) {
+    if (!this.isDragging) return;
+    
+    // Empêcher le scroll sur mobile
+    if (e.touches) e.preventDefault();
+    
+    const currentAngle = this.getAngleFromCenter(e);
+    let deltaAngle = currentAngle - this.lastAngle;
+    
+    // Gérer le passage de 180° à -180°
+    if (deltaAngle > 180) deltaAngle -= 360;
+    if (deltaAngle < -180) deltaAngle += 360;
+    
+    this.currentRotation += deltaAngle;
+    this.lastAngle = currentAngle;
+    
+    // Appliquer la rotation à l'image
+    this.iconImg.style.transform = `rotate(${this.currentRotation}deg)`;
+    
+    // Scrubber la musique
+    const currentAudio = this.getCurrentAudio();
+    if (currentAudio && currentAudio.duration) {
+      // 360° = durée totale / 10 (pour un scrubbing plus précis)
+      const timeChange = (deltaAngle / 360) * (currentAudio.duration / 10);
+      let newTime = currentAudio.currentTime + timeChange;
+      
+      // Clamp entre 0 et la durée
+      newTime = Math.max(0, Math.min(currentAudio.duration, newTime));
+      currentAudio.currentTime = newTime;
+    }
+    
+    // Ajuster le volume du scratch selon la vitesse
+    if (this.scratchAudio && !this.scratchAudio.paused) {
+      const speed = Math.abs(deltaAngle);
+      this.scratchAudio.volume = Math.min(0.5, speed / 20);
+      
+      // Ajuster le playback rate selon la direction
+      this.scratchAudio.playbackRate = deltaAngle >= 0 ? 1 : 0.8;
+    }
+  },
+  
+  onDragEnd(e) {
+    if (!this.isDragging) return;
+    
+    this.isDragging = false;
+    this.iconContainer.classList.remove('is-scrubbing');
+    
+    // Arrêter le son de scratch
+    if (this.scratchAudio) {
+      this.scratchAudio.pause();
+      this.scratchAudio.currentTime = 0;
+    }
+    
+    // Reprendre la lecture si elle était en cours avant
+    const currentAudio = this.getCurrentAudio();
+    if (currentAudio && this.wasPlayingBeforeDrag && !this.isPaused) {
+      currentAudio.play().catch(() => {});
+      this.iconContainer.classList.add('is-playing');
+    }
+    
+    // Reset la rotation CSS (l'animation reprendra)
+    this.iconImg.style.transform = '';
+    this.currentRotation = 0;
+  },
+  
+  getCurrentAudio() {
+    // Retourner l'audio actuellement actif
+    if (ChapterMusicManager.currentAudio && ChapterMusicManager.currentChapter) {
+      return ChapterMusicManager.currentAudio;
+    } else if (ChapterMusicManager.isPlayingHero && ChapterMusicManager.heroAudio) {
+      return ChapterMusicManager.heroAudio;
+    }
+    return null;
   },
   
   startObserving() {
-    // Vérifier le chapitre courant régulièrement
-    const checkChapter = () => {
+    // Vérifier le chapitre courant et l'état de lecture régulièrement
+    const checkState = () => {
       const currentChapterId = ChapterMusicManager.currentChapter;
       
+      // Mise à jour de l'icône si le chapitre change
       if (currentChapterId && currentChapterId !== this.currentChapter) {
         this.updateIcon(currentChapterId);
+      }
+      
+      // Mise à jour de l'état de rotation (sauf si en scrubbing)
+      if (!this.isDragging) {
+        this.updatePlayState();
       }
     };
     
     // Vérifier toutes les 200ms
-    setInterval(checkChapter, 200);
+    setInterval(checkState, 200);
+  },
+  
+  updatePlayState() {
+    if (!this.iconContainer) return;
+    
+    // Si en pause manuelle, garder l'état pausé
+    if (this.isPaused) {
+      this.iconContainer.classList.remove('is-playing');
+      this.iconContainer.classList.add('is-paused');
+      return;
+    }
+    
+    // Vérifier si une musique joue (chapitre ou hero)
+    const isChapterPlaying = ChapterMusicManager.currentAudio && 
+                             !ChapterMusicManager.currentAudio.paused &&
+                             ChapterMusicManager.currentAudio.volume > 0;
+    
+    const isHeroPlaying = ChapterMusicManager.isPlayingHero && 
+                          ChapterMusicManager.heroAudio &&
+                          !ChapterMusicManager.heroAudio.paused &&
+                          ChapterMusicManager.heroAudio.volume > 0;
+    
+    const isMuted = ChapterMusicManager.isSoundMuted;
+    
+    if (isMuted) {
+      // Son coupé - icône en pause
+      this.iconContainer.classList.remove('is-playing');
+      this.iconContainer.classList.add('is-paused');
+    } else if (isChapterPlaying || isHeroPlaying) {
+      // Musique en cours - icône tourne
+      this.iconContainer.classList.add('is-playing');
+      this.iconContainer.classList.remove('is-paused');
+    } else {
+      // Pas de musique - icône arrêtée
+      this.iconContainer.classList.remove('is-playing');
+      this.iconContainer.classList.remove('is-paused');
+    }
+  },
+  
+  togglePlayPause() {
+    // Ne pas toggle si on est en train de scrubber
+    if (this.isDragging) return;
+    
+    if (this.isPaused) {
+      // Reprendre la lecture
+      this.resumeMusic();
+      this.isPaused = false;
+    } else {
+      // Mettre en pause
+      this.pauseMusic();
+      this.isPaused = true;
+    }
+  },
+  
+  pauseMusic() {
+    // Pause la musique du chapitre
+    if (ChapterMusicManager.currentAudio && !ChapterMusicManager.currentAudio.paused) {
+      ChapterMusicManager.currentAudio.pause();
+    }
+    
+    // Pause la musique hero
+    if (ChapterMusicManager.heroAudio && !ChapterMusicManager.heroAudio.paused) {
+      ChapterMusicManager.heroAudio.pause();
+    }
+  },
+  
+  resumeMusic() {
+    // Reprendre la musique du chapitre si on était dans un chapitre
+    if (ChapterMusicManager.currentAudio && ChapterMusicManager.currentChapter) {
+      ChapterMusicManager.currentAudio.play().catch(() => {});
+    }
+    // Reprendre la musique hero si elle était en cours
+    else if (ChapterMusicManager.isPlayingHero && ChapterMusicManager.heroAudio) {
+      ChapterMusicManager.heroAudio.play().catch(() => {});
+    }
   },
   
   updateIcon(chapterId) {
@@ -2342,6 +2733,9 @@ const ChapterIconManager = {
     
     const newIcon = chapterData[chapterId].icon;
     if (!newIcon) return;
+    
+    // Reset l'état de pause quand on change de chapitre
+    this.isPaused = false;
     
     // Animation de changement
     this.iconContainer.classList.add('is-changing');

@@ -19,6 +19,95 @@
   color: #EC1D31;
 }
 
+/* ============================================
+   CURSEUR CUSTOM
+   ============================================ */
+.custom-cursor {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+  mix-blend-mode: difference;
+}
+
+.cursor-dot {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background-color: #EC1D31;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease, background-color 0.3s ease;
+  z-index: 100001;
+}
+
+.cursor-ring {
+  position: fixed;
+  width: 45px;
+  height: 45px;
+  border: 2px solid #EC1D31;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s ease-out, width 0.3s ease, height 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+  z-index: 100000;
+}
+
+/* État hover sur éléments cliquables */
+.custom-cursor.is-hovering .cursor-dot {
+  transform: translate(-50%, -50%) scale(0);
+}
+
+.custom-cursor.is-hovering .cursor-ring {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(236, 29, 49, 0.1);
+  border-width: 3px;
+}
+
+/* État hover sur texte */
+.custom-cursor.is-text .cursor-dot {
+  width: 3px;
+  height: 25px;
+  border-radius: 2px;
+}
+
+.custom-cursor.is-text .cursor-ring {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+}
+
+/* État pressed */
+.custom-cursor.is-pressing .cursor-ring {
+  transform: translate(-50%, -50%) scale(0.8);
+  background-color: rgba(236, 29, 49, 0.2);
+}
+
+/* État caché (quand souris sort de la fenêtre) */
+.custom-cursor.is-hidden .cursor-dot,
+.custom-cursor.is-hidden .cursor-ring {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+}
+
+/* Masquer le curseur par défaut */
+body,
+body * {
+  cursor: none !important;
+}
+
+/* Sur mobile/tablette, ne pas afficher le curseur custom */
+@media (hover: none) and (pointer: coarse) {
+  .custom-cursor {
+    display: none !important;
+  }
+  
+  body,
+  body * {
+    cursor: auto !important;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -1591,7 +1680,7 @@ body:not(.site-locked) .tour-fixed-button {
 }
 
 .tour-fixed-button:hover {
-  transform: scale(1.05);
+  padding: 12px 26px;
   box-shadow: 0 10px 40px rgba(236, 29, 49, 0.6);
 }
 
@@ -1694,7 +1783,9 @@ body:not(.site-locked) .home-fixed-logo {
   opacity: 0;
   transform: translateY(20px) scale(0.8);
   pointer-events: none;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
 body:not(.site-locked) .chapter-icon-fixed {
@@ -1715,7 +1806,39 @@ body.in-hero .chapter-icon-fixed {
   height: 100%;
   object-fit: contain;
   filter: drop-shadow(0 0 15px rgba(236, 29, 49, 0.3));
-  transition: all 0.4s ease;
+  transition: filter 0.4s ease;
+}
+
+/* Animation de rotation vinyle */
+@keyframes vinylSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Quand la musique joue - rotation active */
+.chapter-icon-fixed.is-playing img {
+  animation: vinylSpin 4s linear infinite;
+}
+
+/* Quand la musique est en pause - rotation arrêtée */
+.chapter-icon-fixed.is-paused img {
+  animation: vinylSpin 4s linear infinite;
+  animation-play-state: paused;
+}
+
+/* Quand on scrub le vinyle */
+.chapter-icon-fixed.is-scrubbing {
+  transform: translateY(0) scale(1.15);
+}
+
+.chapter-icon-fixed.is-scrubbing img {
+  animation: none !important;
+  filter: drop-shadow(0 0 30px rgba(236, 29, 49, 0.6));
+  transition: none;
 }
 
 .chapter-icon-fixed.is-changing img {
@@ -1724,7 +1847,6 @@ body.in-hero .chapter-icon-fixed {
 }
 
 .chapter-icon-fixed:hover img {
-  transform: scale(1.1);
   filter: drop-shadow(0 0 25px rgba(236, 29, 49, 0.5));
 }
 

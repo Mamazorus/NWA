@@ -21,6 +21,83 @@
 }
 
 /* ============================================
+   CURSEUR CUSTOM
+   ============================================ */
+.custom-cursor {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+  mix-blend-mode: difference;
+}
+
+.cursor-dot {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background-color: var(--nwa-red);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease, width 0.3s ease, height 0.3s ease, background-color 0.3s ease;
+  z-index: 100001;
+}
+
+.cursor-ring {
+  position: fixed;
+  width: 45px;
+  height: 45px;
+  border: 2px solid var(--nwa-red);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform 0.15s ease-out, width 0.3s ease, height 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+  z-index: 100000;
+}
+
+/* État hover sur éléments cliquables */
+.custom-cursor.is-hovering .cursor-dot {
+  transform: translate(-50%, -50%) scale(0);
+}
+
+.custom-cursor.is-hovering .cursor-ring {
+  width: 60px;
+  height: 60px;
+  background-color: rgba(236, 29, 49, 0.1);
+  border-width: 3px;
+}
+
+/* État pressed */
+.custom-cursor.is-pressing .cursor-ring {
+  transform: translate(-50%, -50%) scale(0.8);
+  background-color: rgba(236, 29, 49, 0.2);
+}
+
+/* État caché (quand souris sort de la fenêtre) */
+.custom-cursor.is-hidden .cursor-dot,
+.custom-cursor.is-hidden .cursor-ring {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+}
+
+/* Masquer le curseur par défaut */
+.tour-page,
+.tour-page * {
+  cursor: none !important;
+}
+
+/* Sur mobile/tablette, ne pas afficher le curseur custom */
+@media (hover: none) and (pointer: coarse) {
+  .custom-cursor {
+    display: none !important;
+  }
+  
+  .tour-page,
+  .tour-page * {
+    cursor: auto !important;
+  }
+}
+
+/* ============================================
    NAVIGATION
    ============================================ */
 .tour-nav {
